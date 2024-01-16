@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "version": "changeset version",
-    "publish": "npm build && changeset publish"
+    "publish": "pnpm run build && changeset publish"
   },
   "keywords": [],
   "author": "",
