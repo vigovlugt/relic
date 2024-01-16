@@ -10,7 +10,8 @@
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "version": "changeset version"
   },
   "keywords": [],
   "author": "",
