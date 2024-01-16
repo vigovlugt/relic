@@ -29,7 +29,7 @@ jobs:
 
             - name: Create release Pull Request or Publish
               id: changesets
-              uses: changesets/action@v3
+              uses: changesets/action@v1
               with:
                   publish: pnpm run build && changesets publish
               env:
