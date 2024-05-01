@@ -22,6 +22,7 @@
     "access": "public"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.27.1",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
     "eslint": "^8.56.0",
@@ -30,6 +31,7 @@
     "vitest": "^1.2.0"
   },
   "dependencies": {
-    "@changesets/cli": "^2.27.1"
+    "@sqlite.org/sqlite-wasm": "3.45.3-build1",
+    "drizzle-orm": "^0.30.9"
   }
 }
