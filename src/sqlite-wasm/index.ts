@@ -5,7 +5,7 @@ import {
     CommandToCommandResponse,
     CommandResponse,
 } from "./shared";
-import { SqliteDb } from "../database";
+import { SqliteDb } from "../client/database";
 
 export async function createSqliteWasmDb() {
     const worker = new Worker(new URL("worker.ts", import.meta.url), {

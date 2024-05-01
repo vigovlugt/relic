@@ -3,16 +3,14 @@
 // import App from "./App.tsx";
 import "./index.css";
 import { createSqliteWasmDb } from "../../../src/sqlite-wasm/index.ts";
-import { drizzle } from "../../../src/database/drizzle.ts";
-import { ReactiveManager } from "../../../src/database/reactivity.ts";
-import { RollbackManager } from "../../../src/database/rollback.ts";
+import { drizzle } from "../../../src/client/database/drizzle.ts";
+import { RollbackManager } from "../../../src/client/database/rollback.ts";
 import { text, integer, sqliteTable } from "drizzle-orm/sqlite-core";
 import { eq } from "drizzle-orm";
 
 console.log("Hello from main.tsx");
 const sqlite = await createSqliteWasmDb();
 console.log("SQLite initialized");
-const _reactive = new ReactiveManager();
 const db = drizzle(sqlite);
 const rollbackManager = new RollbackManager(sqlite, "_relic_rollback");
 

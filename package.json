@@ -32,6 +32,7 @@
   },
   "dependencies": {
     "@sqlite.org/sqlite-wasm": "3.45.3-build1",
-    "drizzle-orm": "^0.30.9"
+    "drizzle-orm": "^0.30.9",
+    "zod": "^3.23.5"
   }
 }
