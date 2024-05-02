@@ -12,10 +12,10 @@ console.log("Hello from main.tsx");
 const sqlite = await createSqliteWasmDb();
 console.log("SQLite initialized");
 const db = drizzle(sqlite);
-const rollbackManager = new RollbackManager(sqlite, "_relic_rollback");
+const rollbackManager = new RollbackManager(sqlite, "_relic_rollback_log");
 
 sqlite.exec(`
-    DROP TABLE IF EXISTS _relic_rollback;
+    DROP TABLE IF EXISTS _relic_rollback_log;
     DROP TABLE IF EXISTS users;
     DROP TABLE IF EXISTS teams;
     CREATE TABLE users (
@@ -52,6 +52,8 @@ await db.insert(teams).values({ id: "2", name: "Team 2" });
 await db.insert(users).values({ id: "3", name: "Charlie", age: 18 });
 await db.update(users).set({ name: "Delta" }).where(eq(users.id, "1"));
 await db.delete(users).where(eq(users.id, "2"));
+
+// const q = db.select().from(users);
 
 console.log("Middle:", await db.select().from(users));
 

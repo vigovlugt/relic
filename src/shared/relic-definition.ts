@@ -1,13 +1,13 @@
 import { RelicSchema, RelicContext } from "./relic-definition-builder";
-import { RelicMutation } from "../relic-mutation";
+import { RelicMutation, RelicMutationBuilder } from "../relic-mutation";
 
 export class RelicDefinition<
     TContext extends RelicContext = RelicContext,
     TSchema extends RelicSchema = RelicSchema,
-    TMutations extends Record<string, RelicMutation<TContext>> = Record<
+    TMutations extends Record<
         string,
-        RelicMutation<TContext>
-    >
+        RelicMutationBuilder<TContext> | RelicMutation<TContext>
+    > = Record<string, RelicMutationBuilder<TContext> | RelicMutation<TContext>>
 > {
     public _: {
         schema: TSchema;

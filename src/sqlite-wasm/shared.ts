@@ -10,10 +10,16 @@ export type SqlExecCommand = BaseCommand & {
     bind?: BindingSpec;
 };
 
-export type SqlExecCommandResponse = BaseCommand & {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    rows: SqlValue[][];
-};
+export type SqlExecCommandResponse = BaseCommand &
+    (
+        | {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              rows: SqlValue[][];
+          }
+        | {
+              error: Error;
+          }
+    );
 
 export type InitializedMessage = {
     type: "initialized";

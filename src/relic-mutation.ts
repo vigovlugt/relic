@@ -1,70 +1,89 @@
 import { RelicContext } from "./shared/relic-definition-builder";
-import { ZodTypeAny } from "zod";
+import { ZodTypeAny, output } from "zod";
 
 export type RelicMutationHandlerOptions<
     TContext extends RelicContext,
-    TInput extends RelicMutationInput
+    TInput extends RelicMutationInput,
+    TTx = unknown
 > = {
-    input: TInput;
+    input: TInput extends ZodTypeAny ? output<TInput> : never;
     context: TContext;
+    tx: TTx;
 };
 
 export type RelicMutationInput = ZodTypeAny | undefined;
 
 export type RelicMutationHandler<
-    TContext extends RelicContext,
-    TInput extends RelicMutationInput
-> = (opts: RelicMutationHandlerOptions<TContext, TInput>) => void;
-
-export class RelicMutation<
     TContext extends RelicContext = RelicContext,
     TInput extends RelicMutationInput = RelicMutationInput,
-    THandler extends undefined | RelicMutationHandler<TContext, TInput> =
-        | undefined
-        | RelicMutationHandler<TContext, TInput>
+    TTx = unknown
+> = (
+    opts: RelicMutationHandlerOptions<TContext, TInput, TTx>
+) => Promise<void> | void;
+
+export class RelicMutationBuilder<
+    TContext extends RelicContext = RelicContext,
+    TInput extends RelicMutationInput = RelicMutationInput,
+    TTx = unknown
 > {
     public _: {
         context: TContext;
         input: TInput;
-        handler: THandler;
     };
 
-    constructor(input: TInput, handler: THandler) {
+    constructor(input: TInput) {
         this._ = {
             context: undefined as unknown as TContext,
             input,
-            handler,
         };
     }
 
     input<TNewInput extends ZodTypeAny>(input: TNewInput) {
-        if (this._.handler) {
-            throw new Error("Cannot change input after handler has been set");
-        }
-
-        return new RelicMutation<TContext, TNewInput, undefined>(
-            input,
-            this._.handler
-        );
+        return new RelicMutationBuilder<TContext, TNewInput>(input);
     }
 
-    mutate<TNewHandler extends RelicMutationHandler<TContext, TInput>>(
-        handler: TNewHandler
+    mutate<THandler extends RelicMutationHandler<TContext, TInput, TTx>>(
+        handler: THandler
     ) {
-        return new RelicMutation<TContext, TInput, TNewHandler>(
+        return new RelicMutation<TContext, TInput, TTx>(
+            this._.context,
             this._.input,
             handler
         );
     }
 }
 
-export type RelicMutationWithHandler<
+export class RelicMutation<
     TContext extends RelicContext = RelicContext,
     TInput extends RelicMutationInput = RelicMutationInput,
-    THandler extends RelicMutationHandler<
-        TContext,
-        TInput
-    > = RelicMutationHandler<TContext, TInput>
-> = RelicMutation<TContext, TInput, THandler>;
+    TTx = unknown
+> {
+    public _: {
+        context: TContext;
+        input: TInput;
+        // TODO: Should be more specific
+        handler: RelicMutationHandler;
+    };
 
-export type RelicMutationSchema = Record<string, RelicMutationWithHandler>;
+    constructor(
+        context: TContext,
+        input: TInput,
+        handler: RelicMutationHandler<TContext, TInput, TTx>
+    ) {
+        this._ = {
+            context,
+            input,
+            handler: handler as RelicMutationHandler,
+        };
+    }
+
+    mutate<THandler extends RelicMutationHandler<TContext, TInput>>(
+        handler: THandler
+    ) {
+        return new RelicMutation<TContext, TInput>(
+            this._.context,
+            this._.input,
+            handler
+        );
+    }
+}

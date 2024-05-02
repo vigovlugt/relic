@@ -1,5 +1,5 @@
 import { SQLiteTableWithColumns } from "drizzle-orm/sqlite-core";
-import { RelicMutation, RelicMutationInput } from "../relic-mutation";
+import { RelicMutation, RelicMutationBuilder } from "../relic-mutation";
 import { RelicDefinition } from "./relic-definition";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -32,12 +32,15 @@ export class RelicDefinitionBuilder<
     }
 
     get mutation() {
-        return new RelicMutation<TContext, undefined>(undefined, undefined);
+        return new RelicMutationBuilder<TContext, undefined>(undefined);
     }
 
-    mutations<TMutations extends Record<string, RelicMutation<TContext>>>(
-        mutations: TMutations
-    ) {
+    mutations<
+        TMutations extends Record<
+            string,
+            RelicMutationBuilder<TContext> | RelicMutation<TContext>
+        >
+    >(mutations: TMutations) {
         return new RelicDefinition<TContext, TSchema, TMutations>(
             this._.schema,
             mutations

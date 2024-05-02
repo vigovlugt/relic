@@ -1,10 +1,14 @@
-import { RelicMutationWithHandler } from "../relic-mutation";
+import { RelicMutation, RelicMutationInput } from "../relic-mutation";
 import { RelicContext, RelicSchema } from "../shared/relic-definition-builder";
+import { ClientTx } from "./relic-client-builder";
 
 export class RelicClient<
-    TContext extends RelicContext,
-    TSchema extends RelicSchema,
-    TMutations extends Record<string, RelicMutationWithHandler<TContext>>
+    TContext extends RelicContext = RelicContext,
+    TSchema extends RelicSchema = RelicSchema,
+    TMutations extends Record<string, RelicMutation<TContext>> = Record<
+        string,
+        RelicMutation<TContext, RelicMutationInput, ClientTx>
+    >
 > {
     public _: {
         schema: TSchema;

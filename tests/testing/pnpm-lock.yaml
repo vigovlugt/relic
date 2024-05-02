@@ -8,6 +8,12 @@ dependencies:
   '@sqlite.org/sqlite-wasm':
     specifier: 3.45.3-build1
     version: 3.45.3-build1
+  '@tanstack/query-core':
+    specifier: ^5.32.1
+    version: 5.32.1
+  '@tanstack/react-query':
+    specifier: ^5.32.1
+    version: 5.32.1(react@18.3.1)
   drizzle-orm:
     specifier: ^0.30.9
     version: 0.30.9(@types/react@18.3.1)(react@18.3.1)
@@ -726,6 +732,19 @@ packages:
   /@sqlite.org/sqlite-wasm@3.45.3-build1:
     resolution: {integrity: sha512-/eLqlKmyPoHpYZkg5VmEZpknisOShPX59Rm//zKHFVqqCk/7/mYT/i5CrooRQDqzfhq0Bm8IDynC+fbL0C1WfQ==}
     hasBin: true
+
+  /@tanstack/query-core@5.32.1:
+    resolution: {integrity: sha512-mCWa1wdGb1jiny4+qYegbSeadcFj+Nq65KFSs4A1DRveoIq7SrTwUhqu7hrB6d54cQH5x59DfJvxusn3w1Cj/g==}
+    dev: false
+
+  /@tanstack/react-query@5.32.1(react@18.3.1):
+    resolution: {integrity: sha512-+nXLMB0JK0XwTJ+lQt49DPNLrbSppni9N5W5yMR085yW3YaRKRUFhfVTER3TvQd1UycHpoGPFnt1gHiijXERAg==}
+    peerDependencies:
+      react: ^18.0.0
+    dependencies:
+      '@tanstack/query-core': 5.32.1
+      react: 18.3.1
+    dev: false
 
   /@types/babel__core@7.20.5:
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
@@ -2035,6 +2054,10 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
+  /zod@3.23.5:
+    resolution: {integrity: sha512-fkwiq0VIQTksNNA131rDOsVJcns0pfVUjHzLrNBiF/O/Xxb5lQyEXkhZWcJ7npWsYlvs+h0jFWXXy4X46Em1JA==}
+    dev: true
+
   file:../..(@types/react@18.3.1)(react@18.3.1):
     resolution: {directory: ../.., type: directory}
     id: file:../..
@@ -2042,6 +2065,7 @@ packages:
     dependencies:
       '@sqlite.org/sqlite-wasm': 3.45.3-build1
       drizzle-orm: 0.30.9(@types/react@18.3.1)(react@18.3.1)
+      zod: 3.23.5
     transitivePeerDependencies:
       - '@aws-sdk/client-rds-data'
       - '@cloudflare/workers-types'

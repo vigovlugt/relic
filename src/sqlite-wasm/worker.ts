@@ -50,19 +50,30 @@ class WorkerDb {
         this.postMessage({
             ...result,
             messageId: message.messageId,
-        });
+        } as CommandToCommandResponse<T>);
     }
 
     async exec(message: SqlExecCommand) {
-        const result = this.db.exec(message.sql, {
-            returnValue: "resultRows",
-            bind: message.bind,
-            // rowMode: "object",
-        });
+        try {
+            const result = this.db.exec(message.sql, {
+                returnValue: "resultRows",
+                bind: message.bind,
+            });
 
-        this.respondTo(message, {
-            rows: result,
-        });
+            this.respondTo(message, {
+                rows: result,
+            });
+        } catch (e) {
+            if (e instanceof Error) {
+                return this.respondTo(message, {
+                    error: e,
+                });
+            }
+
+            return this.respondTo(message, {
+                error: new Error("Unknown sql exec error: " + e),
+            });
+        }
     }
 }
 

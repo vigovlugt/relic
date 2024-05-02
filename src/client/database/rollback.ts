@@ -79,6 +79,14 @@ END;`;
         await this.db.exec(`DELETE FROM ${this.rollbackTable}`);
     }
 
+    async getAll() {
+        const { rows } = await this.db.exec(
+            `SELECT * FROM ${this.rollbackTable}`
+        );
+
+        return rows;
+    }
+
     async rollback() {
         const { rows } = await this.db.exec(
             `SELECT sql FROM ${this.rollbackTable} ORDER BY id DESC`

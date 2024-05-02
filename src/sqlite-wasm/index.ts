@@ -1,4 +1,3 @@
-import { BindingSpec } from "@sqlite.org/sqlite-wasm";
 import {
     Command,
     MessageResponse,
@@ -6,6 +5,7 @@ import {
     CommandResponse,
 } from "./shared";
 import { SqliteDb } from "../client/database";
+import { BindingSpec } from "@sqlite.org/sqlite-wasm";
 
 export async function createSqliteWasmDb() {
     const worker = new Worker(new URL("worker.ts", import.meta.url), {
@@ -75,14 +75,19 @@ export class SQLiteWasmDb implements SqliteDb {
     }
 
     async exec(sql: string, bind?: BindingSpec) {
-        const { rows } = await this.sendCommand({
+        // console.log("exec", sql, bind);
+        const response = await this.sendCommand({
             type: "exec",
             bind,
             sql,
         });
 
+        if ("error" in response) {
+            throw response.error;
+        }
+
         return {
-            rows,
+            rows: response.rows,
         };
     }
 }
