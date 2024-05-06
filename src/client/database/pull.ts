@@ -1,16 +1,22 @@
 import { SqliteDb } from ".";
-import { SQLiteTransaction, getTableConfig } from "drizzle-orm/sqlite-core";
+import { getTableConfig } from "drizzle-orm/sqlite-core";
 import { RelicPullResponse } from "../../shared/pull";
 import { RelicSchema } from "../../shared/relic-definition-builder";
 
 export async function applyPullData(
     db: SqliteDb,
     schema: RelicSchema,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    tx: SQLiteTransaction<any, any, any, any>,
     pullResponse: RelicPullResponse
 ) {
-    for (const [tableName, rows] of Object.entries(pullResponse.data)) {
+    const { clear, entities } = pullResponse.data;
+    if (clear) {
+        for (const table of Object.values(schema)) {
+            const { name } = getTableConfig(table);
+            await db.exec(`DELETE FROM ${name}`);
+        }
+    }
+
+    for (const [tableName, rows] of Object.entries(entities)) {
         const tableSchema = schema[tableName];
         if (!tableSchema) {
             throw new Error(`Table ${tableName} not found in schema`);
@@ -23,8 +29,15 @@ export async function applyPullData(
             Object.entries(tableSchema).map(([k, v]) => [v.name, k])
         );
 
+        for (const row of rows.delete) {
+            // TODO: make composite primary keys possible
+            const sql = `DELETE FROM ${name} WHERE id = ?`;
+            const params = [row];
+            await db.exec(sql, params);
+        }
+
         // TODO: batch for performance
-        for (const row of rows) {
+        for (const row of rows.put) {
             const sql = `INSERT OR REPLACE INTO ${name} (${table.columns
                 .map((c) => c.name)
                 .join(", ")}) VALUES (${columns.map(() => "?").join(", ")})`;

@@ -1,10 +1,10 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { db, relic } from "./relic";
+import { db, relic } from "./relic/relic";
 import { todos } from "./db";
 
 function App() {
     const { data: todoList } = useSuspenseQuery(
-        relic.queryOptions(db.select().from(todos))
+        relic.queryOptions(db.select().from(todos).orderBy(todos.name))
     );
     console.log(todoList);
 

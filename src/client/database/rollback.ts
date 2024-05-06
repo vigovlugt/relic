@@ -31,7 +31,9 @@ export class RollbackManager {
             )
         ).rows
             .map((r) => r[0] as string)
-            .filter((name) => !name.startsWith("_"));
+            .filter(
+                (name) => !name.startsWith("_") && !name.startsWith("sqlite_")
+            );
 
         promises = promises.concat(
             tables.map(async (table) => {

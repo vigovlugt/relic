@@ -4,8 +4,18 @@ export type RelicPullRequest = {
 };
 
 export type RelicPullResponse = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    data: Record<string, any[]>;
+    data: RelicPullData;
     lastProcessedMutationId: number;
     version: number;
+};
+
+export type RelicPullData = {
+    clear: boolean;
+    entities: Record<
+        string,
+        {
+            put: Record<string, unknown>[];
+            delete: string[];
+        }
+    >;
 };

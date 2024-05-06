@@ -7,7 +7,7 @@ export type RelicMutationHandlerOptions<
     TTx = unknown
 > = {
     input: TInput extends ZodTypeAny ? output<TInput> : never;
-    context: TContext;
+    ctx: TContext;
     tx: TTx;
 };
 

@@ -12,7 +12,7 @@ export class MutationQueue {
 
     async setup() {
         await this.db.exec(
-            `CREATE TABLE IF NOT EXISTS ${this.tableName} (id INTEGER PRIMARY KEY, name TEXT, input TEXT)`
+            `CREATE TABLE IF NOT EXISTS ${this.tableName} (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, input TEXT)`
         );
     }
 

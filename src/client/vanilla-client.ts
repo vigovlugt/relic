@@ -78,7 +78,9 @@ export class RelicVanillaClient<TClient extends RelicClient> {
         this.pusher =
             pusher ??
             (async (push) => {
-                const res = await fetch(this.url, {
+                const url =
+                    this.url + (this.url.endsWith("/") ? "" : "/") + "push";
+                const res = await fetch(url, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -94,15 +96,9 @@ export class RelicVanillaClient<TClient extends RelicClient> {
         this.puller =
             puller ??
             (async (pull) => {
-                // TODO: remove comment if not needed
-                // return {
-                //     version: 1,
-                //     data: {
-                //         todos: [{ id: "x", name: "Hello", done: false }],
-                //     },
-                //     lastProcessedMutationId: 1,
-                // };
-                const res = await fetch(this.url, {
+                const url =
+                    this.url + (this.url.endsWith("/") ? "" : "/") + "pull";
+                const res = await fetch(url, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -143,13 +139,16 @@ export class RelicVanillaClient<TClient extends RelicClient> {
                                         // Invoke the mutation
                                         await mutation._.handler({
                                             input,
-                                            context: this.context,
+                                            ctx: this.context,
                                             tx,
                                         });
                                     })
                             );
 
-                            await this.invalidateQueries();
+                            await Promise.all([
+                                this.push(),
+                                this.invalidateQueries(),
+                            ]);
                         },
                     ];
                 }
@@ -171,8 +170,11 @@ export class RelicVanillaClient<TClient extends RelicClient> {
     }
 
     public queryOptions<
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        TQuery extends SQLiteSelectBase<any, "async", any, any>
+        TQuery extends Pick<
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            SQLiteSelectBase<any, "async", any, any>,
+            "execute" | "toSQL"
+        >
     >(query: TQuery) {
         const { sql, params } = query.toSQL();
 
@@ -192,11 +194,23 @@ export class RelicVanillaClient<TClient extends RelicClient> {
         const mutations = await this.dbMutex.withLock(
             async () => await this.mutationQueue.getAll()
         );
+        if (mutations.length === 0) {
+            return;
+        }
 
         await this.pusher({
             clientId: this.id,
             mutations,
         });
+
+        await this.dbMutex.withLock(
+            async () =>
+                await this.mutationQueue.deleteUpTo(
+                    mutations[mutations.length - 1].id
+                )
+        );
+
+        this.pull();
     }
 
     public async pull() {
@@ -226,11 +240,10 @@ export class RelicVanillaClient<TClient extends RelicClient> {
                 // Rollback data
                 await this.rollbackManager.rollback();
 
-                // Apply server data
+                // Apply server data, still within the same transaction
                 await applyPullData(
                     this.sqlite,
                     this.relicClient._.schema,
-                    tx,
                     pullData
                 );
                 // The authorative server data should be the new beginning of the rollback log
@@ -256,7 +269,7 @@ export class RelicVanillaClient<TClient extends RelicClient> {
                         await tx.transaction(async (tx) => {
                             await mut._.handler({
                                 input,
-                                context: this.context,
+                                ctx: this.context,
                                 tx,
                             });
                         });
@@ -318,7 +331,7 @@ export async function createRelicVanillaClient<TClient extends RelicClient>({
     // Setup rollback manager table and triggers
     await rollbackManager.setup();
 
-    return new RelicVanillaClient(
+    const newClient = new RelicVanillaClient(
         clientId,
         relicClient,
         context,
@@ -330,4 +343,14 @@ export async function createRelicVanillaClient<TClient extends RelicClient>({
         queryClient,
         options
     );
+
+    // Do not await pull
+    newClient.pull();
+
+    // TODO: remove
+    setInterval(() => {
+        newClient.pull();
+    }, 1000);
+
+    return newClient;
 }

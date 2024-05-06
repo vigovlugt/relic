@@ -11,5 +11,5 @@ export type JsonArray = JsonValue[];
 export type Mutation = {
     id: number;
     name: string;
-    input: JsonValue;
+    input?: JsonValue;
 };

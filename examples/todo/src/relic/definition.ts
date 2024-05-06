@@ -1,6 +1,6 @@
-import { initRelicDefinition } from "../../../src/shared/relic-definition-builder";
+import { initRelicDefinition } from "../../../../src/shared/relic-definition-builder";
 import z from "zod";
-import { todos } from "./db";
+import { todos } from "../db";
 
 const d = initRelicDefinition().schema({
     todos,

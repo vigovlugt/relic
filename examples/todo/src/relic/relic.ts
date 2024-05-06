@@ -1,9 +1,9 @@
 import { QueryClient } from "@tanstack/react-query";
-import { createRelicVanillaClient } from "../../../src/client/vanilla-client.ts";
+import { createRelicVanillaClient } from "../../../../src/client/vanilla-client.ts";
 import { relicClient } from "./client.ts";
-import { createSqliteWasmDb } from "../../../src/sqlite-wasm/index.ts";
-import { drizzle } from "../../../src/client/database/drizzle.ts";
-import { migrations } from "./db.ts";
+import { createSqliteWasmDb } from "../../../../src/sqlite-wasm/index.ts";
+import { drizzle } from "../../../../src/client/database/drizzle.ts";
+import { migrations } from "../db.ts";
 
 export const queryClient = new QueryClient();
 
@@ -17,5 +17,6 @@ export const relic = await createRelicVanillaClient({
     context: {},
     sqlite,
     db,
-    url: "http://localhost:3000",
+    url: "https://huge-brooms-doubt.loca.lt/relic",
+    // url: "http://localhost:3000/relic",
 });

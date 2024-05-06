@@ -1,6 +1,6 @@
 import { eq, not } from "drizzle-orm";
-import { initRelicClient } from "../../../src/client/relic-client-builder";
-import { todos } from "./db";
+import { initRelicClient } from "../../../../src/client/relic-client-builder";
+import { todos } from "../db";
 import { relicDefinition as relicDefinition } from "./definition";
 
 const c = initRelicClient(relicDefinition);
