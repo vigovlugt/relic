@@ -1,9 +1,10 @@
-import { SQLiteTableWithColumns, TableConfig } from "drizzle-orm/sqlite-core";
+import { SQLiteTableWithColumns } from "drizzle-orm/sqlite-core";
 import { RelicMutation, RelicMutationBuilder } from "./relic-mutation";
 import { RelicDefinition } from "./relic-definition";
 
+// TODO: any -> TableConfig
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type RelicSchema = Record<string, SQLiteTableWithColumns<TableConfig>>;
+export type RelicSchema = Record<string, SQLiteTableWithColumns<any>>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type RelicContext = Record<string, any>;
 

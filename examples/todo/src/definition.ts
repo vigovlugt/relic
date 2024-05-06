@@ -2,12 +2,12 @@ import { initRelicDefinition } from "../../../src/shared/relic-definition-builde
 import z from "zod";
 import { todos } from "./db";
 
-const r = initRelicDefinition().schema({
+const d = initRelicDefinition().schema({
     todos,
 });
-const mutation = r.mutation;
+const mutation = d.mutation;
 
-export const relicDefintion = r.mutations({
+export const relicDefinition = d.mutations({
     addTodo: mutation.input(
         z.object({
             id: z.string(),

@@ -1,12 +1,12 @@
 import { eq, not } from "drizzle-orm";
 import { initRelicClient } from "../../../src/client/relic-client-builder";
 import { todos } from "./db";
-import { relicDefintion as relicDefinition } from "./definition";
+import { relicDefinition as relicDefinition } from "./definition";
 
 const c = initRelicClient(relicDefinition);
 
 const addTodo = c.mutation.addTodo.mutate(async ({ input, tx }) => {
-    await tx.insert(todos).values(input).returning({ id: todos.id }).get();
+    await tx.insert(todos).values(input);
 });
 
 const deleteTodo = c.mutation.deleteTodo.mutate(async ({ input, tx }) => {
@@ -17,7 +17,7 @@ const toggleTodo = c.mutation.toggleTodo.mutate(async ({ input, tx }) => {
     await tx
         .update(todos)
         .set({
-            isDone: not(todos.isDone),
+            done: not(todos.done),
         })
         .where(eq(todos.id, input));
 });

@@ -38,7 +38,7 @@ function App() {
                         <li key={todo.id}>
                             <input
                                 type="checkbox"
-                                checked={todo.isDone}
+                                checked={todo.done}
                                 onChange={() =>
                                     relic.mutate.toggleTodo(todo.id)
                                 }
