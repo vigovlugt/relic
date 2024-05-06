@@ -1,5 +1,5 @@
-import { SqliteDb } from "./database";
-import { Mutation } from "./mutation";
+import { SqliteDb } from ".";
+import { Mutation } from "../../shared/mutation";
 
 export class MutationQueue {
     db: SqliteDb;
@@ -12,7 +12,7 @@ export class MutationQueue {
 
     async setup() {
         await this.db.exec(
-            `CREATE TABLE IF NOT EXISTS ${this.tableName} (id INTEGER PRIMARY KEY, type TEXT, input TEXT)`
+            `CREATE TABLE IF NOT EXISTS ${this.tableName} (id INTEGER PRIMARY KEY, name TEXT, input TEXT)`
         );
     }
 
@@ -22,7 +22,7 @@ export class MutationQueue {
         return rows.map((row) => {
             return {
                 id: row[0] as number,
-                type: row[1] as string,
+                name: row[1] as string,
                 input: JSON.parse(row[2] as string),
             };
         });
@@ -30,8 +30,8 @@ export class MutationQueue {
 
     async add(mutation: Omit<Mutation, "id">) {
         const { rows } = await this.db.exec(
-            `INSERT INTO ${this.tableName} (type, input) VALUES (?, ?) RETURNING id`,
-            [mutation.type, JSON.stringify(mutation.input)]
+            `INSERT INTO ${this.tableName} (name, input) VALUES (?, ?) RETURNING id`,
+            [mutation.name, JSON.stringify(mutation.input)]
         );
 
         const id = rows[0][0] as string;

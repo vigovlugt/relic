@@ -1,5 +1,5 @@
 import { RelicSchema, RelicContext } from "./relic-definition-builder";
-import { RelicMutation, RelicMutationBuilder } from "../relic-mutation";
+import { RelicMutation, RelicMutationBuilder } from "./relic-mutation";
 
 export class RelicDefinition<
     TContext extends RelicContext = RelicContext,

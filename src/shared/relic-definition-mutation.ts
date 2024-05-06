@@ -1,4 +1,4 @@
-import { RelicMutationInput } from "../relic-mutation";
+import { RelicMutationInput } from "./relic-mutation";
 import { RelicContext } from "./relic-definition-builder";
 
 export type RelicDefinitionMutationHandlerOptions<

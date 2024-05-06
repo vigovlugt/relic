@@ -75,7 +75,6 @@ export class SQLiteWasmDb implements SqliteDb {
     }
 
     async exec(sql: string, bind?: BindingSpec) {
-        // console.log("exec", sql, bind);
         const response = await this.sendCommand({
             type: "exec",
             bind,

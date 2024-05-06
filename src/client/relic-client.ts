@@ -1,4 +1,4 @@
-import { RelicMutation, RelicMutationInput } from "../relic-mutation";
+import { RelicMutation, RelicMutationInput } from "../shared/relic-mutation";
 import { RelicContext, RelicSchema } from "../shared/relic-definition-builder";
 import { ClientTx } from "./relic-client-builder";
 

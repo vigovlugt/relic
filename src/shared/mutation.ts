@@ -10,6 +10,6 @@ export type JsonArray = JsonValue[];
 
 export type Mutation = {
     id: number;
-    type: string;
+    name: string;
     input: JsonValue;
 };

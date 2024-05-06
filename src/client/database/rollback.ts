@@ -11,7 +11,7 @@ export class RollbackManager {
         this.rollbackTable = rollbackTable;
     }
 
-    async activate() {
+    async setup() {
         if (this.active) {
             return;
         }
@@ -93,7 +93,9 @@ END;`;
         );
 
         // Run all rollback commands
-        await this.db.exec(rows.map((r) => r[0]).join(";"));
+        if (rows.length) {
+            await this.db.exec(rows.map((r) => r[0]).join(";"));
+        }
 
         await this.clear();
     }

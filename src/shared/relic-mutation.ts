@@ -1,4 +1,4 @@
-import { RelicContext } from "./shared/relic-definition-builder";
+import { RelicContext } from "./relic-definition-builder";
 import { ZodTypeAny, output } from "zod";
 
 export type RelicMutationHandlerOptions<

@@ -1,5 +1,5 @@
 import { SQLiteTransaction } from "drizzle-orm/sqlite-core";
-import { RelicMutation, RelicMutationBuilder } from "../relic-mutation";
+import { RelicMutation, RelicMutationBuilder } from "../shared/relic-mutation";
 import { RelicDefinition } from "../shared/relic-definition";
 import { RelicContext } from "../shared/relic-definition-builder";
 import { RelicClient } from "./relic-client";
