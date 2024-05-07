@@ -13,6 +13,7 @@ import { MetadataManager } from "./database/metadata";
 import { RelicPullRequest, RelicPullResponse } from "../shared/pull";
 import { RelicPushRequest } from "../shared/push";
 import { applyPullData } from "./database/pull";
+import { SQLiteRelationalQuery } from "drizzle-orm/sqlite-core/query-builders/query";
 
 export type RelicPuller = (
     pull: RelicPullRequest
@@ -35,7 +36,7 @@ export class RelicClientInstance<TClient extends RelicClient> {
     private context: TClient["_"]["context"];
 
     private sqlite: SqliteDb;
-    private db: SqliteRemoteDatabase;
+    private db: SqliteRemoteDatabase<Record<string, unknown>>;
     private mutationQueue: MutationQueue;
     private rollbackManager: RollbackManager;
     private metadata: MetadataManager;
@@ -57,7 +58,7 @@ export class RelicClientInstance<TClient extends RelicClient> {
         relicClient: TClient,
         context: TClient["_"]["context"],
         sqlite: SqliteDb,
-        db: SqliteRemoteDatabase,
+        db: SqliteRemoteDatabase<Record<string, unknown>>,
         mutationQueue: MutationQueue,
         rollbackManager: RollbackManager,
         metadata: MetadataManager,
@@ -160,29 +161,28 @@ export class RelicClientInstance<TClient extends RelicClient> {
     }
 
     public async fetchQuery<
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        TQuery extends SQLiteSelectBase<any, "async", any, any>
-    >(query: TQuery) {
+        TQuery extends {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            execute: () => Promise<any>;
+        }
+    >(query: TQuery): Promise<Awaited<ReturnType<TQuery["execute"]>>> {
         return await this.dbMutex.withLock(async () => await query.execute());
     }
 
     public query<
-        TQuery extends Pick<
+        TQuery extends {
+            toSQL: () => {
+                sql: string;
+                params: unknown[];
+            };
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            SQLiteSelectBase<any, "async", any, any>,
-            "execute" | "toSQL"
-        >
+            execute: () => Promise<any>;
+        }
     >(query: TQuery) {
         const { sql, params } = query.toSQL();
 
         return {
-            queryFn: async () => {
-                const result = await this.dbMutex.withLock(async () => {
-                    return await query.execute();
-                });
-
-                return result;
-            },
+            queryFn: () => this.fetchQuery(query),
             queryKey: ["_relic", this.id, "queries", sql, params],
             networkMode: "offlineFirst",
         } satisfies QueryOptions;
@@ -356,7 +356,7 @@ export async function createRelicClient<TClient extends RelicClient>({
     relicClient: TClient;
     // TODO: what if no context
     context: TClient["_"]["context"];
-    db?: SqliteRemoteDatabase;
+    db?: SqliteRemoteDatabase<Record<string, unknown>>;
     sqlite?: SqliteDb;
     queryClient: QueryClient;
 } & RelicVanillaClientOptions) {

@@ -65,8 +65,6 @@ const db = drizzle(sqlite, {
     schema,
 });
 
-db.transaction;
-
 sqlite.exec(`
 CREATE TABLE IF NOT EXISTS relic_clients (
     id TEXT PRIMARY KEY,

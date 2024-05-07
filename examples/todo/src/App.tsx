@@ -7,9 +7,10 @@ function App() {
     const { data: todoList } = useSuspenseQuery(
         relic.query(db.select().from(todos).orderBy(desc(todos.createdAt)))
     );
-    const { data: pendingMutations } = useSuspenseQuery(
-        relic.pendingMutations()
-    );
+
+    // const { data: pendingMutations } = useSuspenseQuery(
+    //     relic.pendingMutations()
+    // );
 
     return (
         <div>
