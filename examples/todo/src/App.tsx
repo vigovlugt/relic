@@ -1,10 +1,13 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { db, relic } from "./relic/relic";
 import { todos } from "./db";
+import { desc } from "drizzle-orm";
 
 function App() {
     const { data: todoList } = useSuspenseQuery(
-        relic.queryOptions(db.select().from(todos).orderBy(todos.name))
+        relic.queryOptions(
+            db.select().from(todos).orderBy(desc(todos.createdAt))
+        )
     );
     console.log(todoList);
 
@@ -64,7 +67,7 @@ function App() {
                     ))}
                 </ul>
             </div>
-            <button onClick={() => relic.debug()}>Debug</button>
+            {/* <button onClick={() => relic.debug()}>Debug</button>
             <button
                 onClick={async () => {
                     console.time("pull");
@@ -82,7 +85,7 @@ function App() {
                 }}
             >
                 Push
-            </button>
+            </button> */}
         </div>
     );
 }

@@ -1,5 +1,5 @@
 import { SqliteDb } from ".";
-import { getTableConfig } from "drizzle-orm/sqlite-core";
+import { SQLiteColumn, getTableConfig } from "drizzle-orm/sqlite-core";
 import { RelicPullResponse } from "../../shared/pull";
 import { RelicSchema } from "../../shared/relic-definition-builder";
 
@@ -37,13 +37,25 @@ export async function applyPullData(
         }
 
         // TODO: batch for performance
+        // TODO: map driver values: timestamp_ms: int -> string
         for (const row of rows.put) {
             const sql = `INSERT OR REPLACE INTO ${name} (${table.columns
                 .map((c) => c.name)
                 .join(", ")}) VALUES (${columns.map(() => "?").join(", ")})`;
-            const params = columns.map((c) => row[jsNameByDbName[c.name]]);
-            console.log(sql, params);
+            const params = columns.map((c) =>
+                transformValue(c, row[jsNameByDbName[c.name]])
+            );
             await db.exec(sql, params);
         }
     }
+}
+
+function transformValue(column: SQLiteColumn, value: unknown) {
+    // SQLiteTimestamps are mapped from Date objects to json in network transfer, so we need to convert them back
+    if (column.columnType === "SQLiteTimestamp" && typeof value === "string") {
+        value = new Date(value);
+    }
+
+    // This maps a JS value to a driver value, such as Date -> number
+    return column.mapToDriverValue(value);
 }

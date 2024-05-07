@@ -7,7 +7,7 @@ import { createSqliteWasmDb } from "../sqlite-wasm";
 import { drizzle } from "./database/drizzle";
 import { QueryClient, QueryOptions } from "@tanstack/query-core";
 import { SQLiteSelectBase } from "drizzle-orm/sqlite-core";
-import { RollbackManager as RollbackManager } from "./database/rollback";
+import { RollbackManager } from "./database/rollback";
 import { Mutex } from "../mutex";
 import { MetadataManager } from "./database/metadata";
 import { RelicPullRequest, RelicPullResponse } from "../shared/pull";
@@ -25,7 +25,7 @@ export type RelicVanillaClientOptions = {
     url: string;
 };
 
-export class RelicVanillaClient<TClient extends RelicClient> {
+export class RelicClientInstance<TClient extends RelicClient> {
     private id: string;
     // Due to the async nature of JavaScript, we must use a mutex to ensure that only one transaction is running at a time
     private dbMutex: Mutex;
@@ -145,10 +145,9 @@ export class RelicVanillaClient<TClient extends RelicClient> {
                                     })
                             );
 
-                            await Promise.all([
-                                this.push(),
-                                this.invalidateQueries(),
-                            ]);
+                            // Do push and invalidate queries asynchronously
+                            this.push();
+                            this.invalidateQueries();
                         },
                     ];
                 }
@@ -180,17 +179,24 @@ export class RelicVanillaClient<TClient extends RelicClient> {
 
         return {
             queryFn: async () => {
-                return await this.dbMutex.withLock(async () => {
+                const result = await this.dbMutex.withLock(async () => {
                     return await query.execute();
                 });
+
+                return result;
             },
             queryKey: ["_relic", this.id, "queries", sql, params],
+            networkMode: "offlineFirst",
         } satisfies QueryOptions;
     }
 
     // TODO: mutationoptions
 
     public async push() {
+        if (!navigator.onLine) {
+            return;
+        }
+
         const mutations = await this.dbMutex.withLock(
             async () => await this.mutationQueue.getAll()
         );
@@ -214,6 +220,9 @@ export class RelicVanillaClient<TClient extends RelicClient> {
     }
 
     public async pull() {
+        if (!navigator.onLine) {
+            return;
+        }
         // TODO: should lock pull, so two pulls do not mess up state
 
         const version = Number(
@@ -301,7 +310,7 @@ export class RelicVanillaClient<TClient extends RelicClient> {
 }
 
 // TODO: refactor
-export async function createRelicVanillaClient<TClient extends RelicClient>({
+export async function createRelicClient<TClient extends RelicClient>({
     relicClient,
     context,
     db,
@@ -331,7 +340,7 @@ export async function createRelicVanillaClient<TClient extends RelicClient>({
     // Setup rollback manager table and triggers
     await rollbackManager.setup();
 
-    const newClient = new RelicVanillaClient(
+    const newClient = new RelicClientInstance(
         clientId,
         relicClient,
         context,
@@ -344,13 +353,14 @@ export async function createRelicVanillaClient<TClient extends RelicClient>({
         options
     );
 
-    // Do not await pull
+    // Do a pull when the client is created, so the client is up-to-date
+    // Not important to await this, as the client will be up-to-date eventually
     newClient.pull();
 
     // TODO: remove
-    setInterval(() => {
-        newClient.pull();
-    }, 1000);
+    // setInterval(() => {
+    //     newClient.pull();
+    // }, 1000);
 
     return newClient;
 }

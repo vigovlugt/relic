@@ -10,7 +10,7 @@ import {
     sqliteTable,
     text,
 } from "drizzle-orm/sqlite-core";
-import { eq, inArray, not, sql } from "drizzle-orm";
+import { eq, not, sql } from "drizzle-orm";
 import * as y from "../../../../src/server/relic-request-handler";
 import * as x from "../../../../src/server/relic-server-builder";
 import * as z from "../../../../src/server/drizzle/sqlite-adapter";
@@ -25,6 +25,11 @@ const clients = sqliteTable("relic_clients", {
 
 const todos = sqliteTable("todos", {
     id: text("id").primaryKey(),
+    createdAt: integer("created_at", {
+        mode: "timestamp_ms",
+    })
+        .notNull()
+        .defaultNow(),
     name: text("name").notNull(),
     done: integer("done", {
         mode: "boolean",
@@ -40,10 +45,10 @@ CREATE TABLE IF NOT EXISTS relic_clients (
     id TEXT PRIMARY KEY,
     mutation_id INTEGER NOT NULL
 );
-INSERT INTO relic_clients (id, mutation_id) VALUES ('1dff7857-2189-4233-9a0c-cd59619a00df', 0) ON CONFLICT DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS todos (
     id TEXT PRIMARY KEY,
+    created_at INTEGER NOT NULL,
     name TEXT NOT NULL,
     done INTEGER NOT NULL,
     version INTEGER NOT NULL DEFAULT 0
@@ -82,23 +87,11 @@ const updateTodo = mutation.updateTodo.mutate(async ({ input, tx }) => {
 });
 
 const puller = s.puller.pull(async ({ tx }) => {
-    const todoIds = await tx.select({ id: todos.id }).from(todos);
-
     return {
         clear: true,
         entities: {
             todos: {
-                put: todoIds.length
-                    ? await tx
-                          .select()
-                          .from(todos)
-                          .where(
-                              inArray(
-                                  todos.id,
-                                  todoIds.map((t) => t.id)
-                              )
-                          )
-                    : [],
+                put: await tx.select().from(todos),
                 delete: [],
             },
         },
