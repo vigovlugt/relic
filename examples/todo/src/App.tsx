@@ -5,11 +5,11 @@ import { desc } from "drizzle-orm";
 
 function App() {
     const { data: todoList } = useSuspenseQuery(
-        relic.queryOptions(
-            db.select().from(todos).orderBy(desc(todos.createdAt))
-        )
+        relic.query(db.select().from(todos).orderBy(desc(todos.createdAt)))
     );
-    console.log(todoList);
+    const { data: pendingMutations } = useSuspenseQuery(
+        relic.pendingMutations()
+    );
 
     return (
         <div>
@@ -67,6 +67,18 @@ function App() {
                     ))}
                 </ul>
             </div>
+            {/* {pendingMutations.length > 0 && (
+                <div>
+                    <h2>Pending mutations</h2>
+                    <ul>
+                        {pendingMutations.map((mutation) => (
+                            <li key={mutation.id}>
+                                {mutation.name} {JSON.stringify(mutation.input)}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )} */}
             {/* <button onClick={() => relic.debug()}>Debug</button>
             <button
                 onClick={async () => {

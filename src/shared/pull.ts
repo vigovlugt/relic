@@ -15,7 +15,8 @@ export type RelicPullData = {
         string,
         {
             put: Record<string, unknown>[];
-            delete: string[];
+            // A key is a value, such as 1, or a object for composite keys: { todoId: 1, userId: 2 }
+            delete: unknown[] | Record<string, unknown>[];
         }
     >;
 };

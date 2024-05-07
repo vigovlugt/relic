@@ -24,26 +24,60 @@ export async function applyPullData(
 
         const table = getTableConfig(tableSchema);
         const { columns, name } = table;
-        // A database column can be called differently than the JS object property, e.g. is_done in sqlite -> isDone in js
-        const jsNameByDbName = Object.fromEntries(
+        // A database column can be called differently than the JSON object property, e.g. is_done in sqlite -> isDone in js
+        const jsonNameByDbName = Object.fromEntries(
             Object.entries(tableSchema).map(([k, v]) => [v.name, k])
         );
 
-        for (const row of rows.delete) {
-            // TODO: make composite primary keys possible
-            const sql = `DELETE FROM ${name} WHERE id = ?`;
-            const params = [row];
-            await db.exec(sql, params);
+        // Delete rows that are marked for deletion
+        if (rows.delete.length > 0) {
+            const type = typeof rows.delete[0];
+
+            // Composite primary keys are objects
+            if (type === "object") {
+                const rowsToDelete = rows.delete as Record<string, unknown>[];
+                const pk = table.primaryKeys[0];
+                if (!pk) {
+                    throw new Error(
+                        `Table ${name} has no composite primary key`
+                    );
+                }
+
+                for (const row of rowsToDelete) {
+                    const sql = `DELETE FROM ${name} WHERE ${pk.columns
+                        .map((c) => `${c.name} = ?`)
+                        .join(" AND ")}`;
+                    const params = pk.columns.map((c) =>
+                        transformValue(c, row[jsonNameByDbName[c.name]])
+                    );
+                    await db.exec(sql, params);
+                }
+            } else {
+                // Single primary keys are values
+                const rowsToDelete = rows.delete as unknown[];
+
+                const pkColumn = columns.find((c) => c.primary);
+                if (!pkColumn) {
+                    throw new Error(`Table ${name} has no primary key`);
+                }
+
+                for (const row of rowsToDelete) {
+                    // TODO: make composite primary keys possible
+                    const sql = `DELETE FROM ${name} WHERE ${pkColumn.name} = ?`;
+                    const params = [transformValue(pkColumn, row)];
+                    await db.exec(sql, params);
+                }
+            }
         }
 
-        // TODO: batch for performance
-        // TODO: map driver values: timestamp_ms: int -> string
+        // Insert or replace new and updated rows
+        // TODO: batch to avoid worker <-> main thread overhead
         for (const row of rows.put) {
             const sql = `INSERT OR REPLACE INTO ${name} (${table.columns
                 .map((c) => c.name)
                 .join(", ")}) VALUES (${columns.map(() => "?").join(", ")})`;
             const params = columns.map((c) =>
-                transformValue(c, row[jsNameByDbName[c.name]])
+                transformValue(c, row[jsonNameByDbName[c.name]])
             );
             await db.exec(sql, params);
         }

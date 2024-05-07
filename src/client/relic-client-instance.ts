@@ -75,6 +75,9 @@ export class RelicClientInstance<TClient extends RelicClient> {
         this.metadata = metadata;
         this.queryClient = queryClient;
         this.url = url;
+
+        this.onOnline = this.onOnline.bind(this);
+
         this.pusher =
             pusher ??
             (async (push) => {
@@ -148,6 +151,7 @@ export class RelicClientInstance<TClient extends RelicClient> {
                             // Do push and invalidate queries asynchronously
                             this.push();
                             this.invalidateQueries();
+                            this.invalidatePendingMutations();
                         },
                     ];
                 }
@@ -155,20 +159,14 @@ export class RelicClientInstance<TClient extends RelicClient> {
         ) as typeof this.mutate;
     }
 
-    public async query<
+    public async fetchQuery<
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         TQuery extends SQLiteSelectBase<any, "async", any, any>
     >(query: TQuery) {
         return await this.dbMutex.withLock(async () => await query.execute());
     }
 
-    public async invalidateQueries() {
-        await this.queryClient.invalidateQueries({
-            queryKey: ["_relic", this.id, "queries"],
-        });
-    }
-
-    public queryOptions<
+    public query<
         TQuery extends Pick<
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             SQLiteSelectBase<any, "async", any, any>,
@@ -190,6 +188,33 @@ export class RelicClientInstance<TClient extends RelicClient> {
         } satisfies QueryOptions;
     }
 
+    private async invalidateQueries() {
+        await this.queryClient.invalidateQueries({
+            queryKey: ["_relic", this.id, "queries"],
+        });
+    }
+
+    public fetchPendingMutations() {
+        return this.dbMutex.withLock(async () => this.mutationQueue.getAll());
+    }
+
+    public pendingMutations() {
+        return {
+            queryFn: async () =>
+                await this.dbMutex.withLock(
+                    async () => await this.mutationQueue.getAll()
+                ),
+            queryKey: ["_relic", this.id, "pendingMutations"],
+            networkMode: "offlineFirst",
+        } satisfies QueryOptions;
+    }
+
+    private async invalidatePendingMutations() {
+        await this.queryClient.invalidateQueries({
+            queryKey: ["_relic", this.id, "pendingMutations"],
+        });
+    }
+
     // TODO: mutationoptions
 
     public async push() {
@@ -209,14 +234,8 @@ export class RelicClientInstance<TClient extends RelicClient> {
             mutations,
         });
 
-        await this.dbMutex.withLock(
-            async () =>
-                await this.mutationQueue.deleteUpTo(
-                    mutations[mutations.length - 1].id
-                )
-        );
-
         this.pull();
+        this.invalidatePendingMutations();
     }
 
     public async pull() {
@@ -296,7 +315,21 @@ export class RelicClientInstance<TClient extends RelicClient> {
             });
         });
 
-        await this.invalidateQueries();
+        this.invalidatePendingMutations();
+        this.invalidateQueries();
+    }
+
+    private onOnline() {
+        this.pull();
+        this.push();
+    }
+
+    setup() {
+        window.addEventListener("online", this.onOnline);
+    }
+
+    destroy() {
+        window.removeEventListener("online", this.onOnline);
     }
 
     // TODO: remove
@@ -353,9 +386,11 @@ export async function createRelicClient<TClient extends RelicClient>({
         options
     );
 
-    // Do a pull when the client is created, so the client is up-to-date
+    // Do a pull and push when the client is created, so the client is up-to-date
     // Not important to await this, as the client will be up-to-date eventually
     newClient.pull();
+    newClient.push();
+    newClient.setup();
 
     // TODO: remove
     // setInterval(() => {

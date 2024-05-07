@@ -112,7 +112,9 @@ export class RelicServer<
                     );
                 }
 
-                console.log(`Processing mutation ${id}`);
+                console.log(
+                    `Processing mutation ${id} of client ${request.clientId}`
+                );
 
                 // TODO: handle errors, either nested transaction, or redo transactionw without executing mutation
                 // Execute mutation

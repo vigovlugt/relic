@@ -22,7 +22,7 @@ type RelicPullHandlerResult<TSchema extends RelicSchema> = {
     entities: {
         [K in keyof TSchema]: {
             put: InferSelectModel<TSchema[K]>[];
-            delete: string[];
+            delete: (unknown | Record<string, unknown>)[];
         };
     };
 };
