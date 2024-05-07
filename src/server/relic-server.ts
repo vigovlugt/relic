@@ -3,7 +3,7 @@ import { RelicContext, RelicSchema } from "../shared/relic-definition-builder";
 import { RelicPushRequest } from "../shared/push";
 import { RelicServerDatabase } from "./relic-server-database";
 import { RelicPullRequest, RelicPullResponse } from "../shared/pull";
-import { RelicPull } from "../shared/relic-pull";
+import { RelicPull } from "./relic-pull";
 
 export type RelicServerPullOptions<TTx> = {
     req: RelicPullRequest;
@@ -66,12 +66,13 @@ export class RelicServer<
             const data = await this._.puller._.handler({
                 tx,
                 ctx,
+                version,
+                clientId,
             });
 
             return {
                 data,
                 lastProcessedMutationId: client.mutationId,
-                version,
             };
         });
     }
@@ -116,11 +117,14 @@ export class RelicServer<
                     `Processing mutation ${id} of client ${request.clientId}`
                 );
 
+                // Validate input against input schema
+                const parsedInput = mutation._.input?.parse(input);
+
                 // TODO: handle errors, either nested transaction, or redo transactionw without executing mutation
                 // Execute mutation
                 await mutation._.handler({
                     tx,
-                    input,
+                    input: parsedInput,
                     ctx: context,
                 });
 

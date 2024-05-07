@@ -1,12 +1,11 @@
 export type RelicPullRequest = {
     clientId: string;
-    version: number;
+    version: string;
 };
 
 export type RelicPullResponse = {
     data: RelicPullData;
     lastProcessedMutationId: number;
-    version: number;
 };
 
 export type RelicPullData = {
@@ -19,4 +18,5 @@ export type RelicPullData = {
             delete: unknown[] | Record<string, unknown>[];
         }
     >;
+    version: string;
 };

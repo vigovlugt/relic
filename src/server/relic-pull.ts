@@ -1,5 +1,5 @@
 import { InferSelectModel } from "drizzle-orm";
-import { RelicContext, RelicSchema } from "./relic-definition-builder";
+import { RelicContext, RelicSchema } from "../shared/relic-definition-builder";
 
 export type RelicPullHandlerOptions<
     TContext extends RelicContext,
@@ -7,6 +7,8 @@ export type RelicPullHandlerOptions<
 > = {
     ctx: TContext;
     tx: TTx;
+    version: string;
+    clientId: string;
 };
 
 export type RelicPullHandler<
@@ -17,7 +19,7 @@ export type RelicPullHandler<
     opts: RelicPullHandlerOptions<TContext, TTx>
 ) => Promise<RelicPullHandlerResult<TSchema>> | RelicPullHandlerResult<TSchema>;
 
-type RelicPullHandlerResult<TSchema extends RelicSchema> = {
+export type RelicPullHandlerResult<TSchema extends RelicSchema> = {
     clear: boolean;
     entities: {
         [K in keyof TSchema]: {
@@ -25,6 +27,7 @@ type RelicPullHandlerResult<TSchema extends RelicSchema> = {
             delete: (unknown | Record<string, unknown>)[];
         };
     };
+    version: string;
 };
 
 export class RelicPullBuilder<

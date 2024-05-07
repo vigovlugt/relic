@@ -244,8 +244,8 @@ export class RelicClientInstance<TClient extends RelicClient> {
         }
         // TODO: should lock pull, so two pulls do not mess up state
 
-        const version = Number(
-            await this.dbMutex.withLock(() => this.metadata.get("version"))
+        const version = await this.dbMutex.withLock(() =>
+            this.metadata.get("version")
         );
         const pullData = await this.puller({
             clientId: this.id,
@@ -256,9 +256,8 @@ export class RelicClientInstance<TClient extends RelicClient> {
         await this.dbMutex.withLock(async () => {
             await this.db.transaction(async (tx) => {
                 // Make sure version is still the same, otherwise delta for previous version should not be applied
-                const currentVersion = Number(
-                    await this.metadata.get("version")
-                );
+                const currentVersion = await this.metadata.get("version");
+
                 if (currentVersion !== version) {
                     throw new Error(
                         `Could not apply pull: version mismatch, expected ${version} but got ${currentVersion}`
@@ -278,7 +277,10 @@ export class RelicClientInstance<TClient extends RelicClient> {
                 await this.rollbackManager.clear();
 
                 // Set new version to be used for next pull
-                await this.metadata.set("version", String(pullData.version));
+                await this.metadata.set(
+                    "version",
+                    String(pullData.data.version)
+                );
 
                 // delete processed mutations
                 this.mutationQueue.deleteUpTo(pullData.lastProcessedMutationId);

@@ -2,7 +2,7 @@ import { RelicMutation, RelicMutationBuilder } from "../shared/relic-mutation";
 import { RelicDefinition } from "../shared/relic-definition";
 import { RelicContext } from "../shared/relic-definition-builder";
 import { RelicServer } from "./relic-server";
-import { RelicPull, RelicPullBuilder } from "../shared/relic-pull";
+import { RelicPull, RelicPullBuilder } from "./relic-pull";
 
 export class RelicServerBuilder<
     TDef extends RelicDefinition = RelicDefinition,

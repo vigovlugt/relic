@@ -8,6 +8,11 @@ import {
 import { RelicServerDatabase } from "../relic-server-database";
 import { eq } from "drizzle-orm";
 
+// TODO: extract transaction from schema, not db object
+export type ExtractTransaction<
+    TDB extends BaseSQLiteDatabase<any, any, any, any>
+> = Parameters<Parameters<TDB["transaction"]>[0]>[0];
+
 export function sqliteAdapter(
     db: BaseSQLiteDatabase<any, any, any>,
     clientsTable: SQLiteRelicClientsTable
