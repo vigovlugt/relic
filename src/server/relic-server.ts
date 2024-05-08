@@ -4,6 +4,7 @@ import { RelicPushRequest } from "../shared/push";
 import { RelicServerDatabase } from "./relic-server-database";
 import { RelicPullRequest, RelicPullResponse } from "../shared/pull";
 import { RelicPull } from "./relic-pull";
+import { RelicPoke } from "./relic-poke";
 
 export type RelicServerPullOptions<TTx> = {
     req: RelicPullRequest;
@@ -34,15 +35,22 @@ export class RelicServer<
         tx: TTx;
         // TODO: make more specific
         puller: RelicPull;
+        poker: RelicPoke | undefined;
     };
 
-    constructor(schema: TSchema, mutations: TMutations, puller: RelicPull) {
+    constructor(
+        schema: TSchema,
+        mutations: TMutations,
+        puller: RelicPull,
+        poker: RelicPoke | undefined
+    ) {
         this._ = {
             schema,
             context: undefined as unknown as TContext,
             mutations,
             tx: undefined as unknown as TTx,
             puller,
+            poker,
         };
     }
 
@@ -133,6 +141,8 @@ export class RelicServer<
             });
         }
 
-        // TODO: poke
+        this._.poker?._.handler({
+            ctx: context,
+        });
     }
 }

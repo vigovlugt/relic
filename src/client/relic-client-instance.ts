@@ -6,14 +6,13 @@ import { SqliteDb } from "./database";
 import { createSqliteWasmDb } from "../sqlite-wasm";
 import { drizzle } from "./database/drizzle";
 import { QueryClient, QueryOptions } from "@tanstack/query-core";
-import { SQLiteSelectBase } from "drizzle-orm/sqlite-core";
 import { RollbackManager } from "./database/rollback";
 import { Mutex } from "../mutex";
 import { MetadataManager } from "./database/metadata";
 import { RelicPullRequest, RelicPullResponse } from "../shared/pull";
 import { RelicPushRequest } from "../shared/push";
 import { applyPullData } from "./database/pull";
-import { SQLiteRelationalQuery } from "drizzle-orm/sqlite-core/query-builders/query";
+import { PokeAdapter as RelicPokeAdapter } from "./poke/adapters/poke-adapter";
 
 export type RelicPuller = (
     pull: RelicPullRequest
@@ -24,6 +23,7 @@ export type RelicVanillaClientOptions = {
     pusher?: RelicPusher;
     puller?: RelicPuller;
     url: string;
+    pokeAdapter?: RelicPokeAdapter;
 };
 
 export class RelicClientInstance<TClient extends RelicClient> {
@@ -44,6 +44,7 @@ export class RelicClientInstance<TClient extends RelicClient> {
     private url: string;
     private pusher: RelicPusher;
     private puller: RelicPuller;
+    private pokeAdapter: RelicPokeAdapter | undefined;
 
     public mutate: {
         [K in keyof TClient["_"]["mutations"]]: TClient["_"]["mutations"][K]["_"]["input"] extends ZodTypeAny
@@ -63,7 +64,7 @@ export class RelicClientInstance<TClient extends RelicClient> {
         rollbackManager: RollbackManager,
         metadata: MetadataManager,
         queryClient: QueryClient,
-        { pusher, puller, url }: RelicVanillaClientOptions
+        { pusher, puller, url, pokeAdapter }: RelicVanillaClientOptions
     ) {
         this.id = id;
         this.dbMutex = new Mutex();
@@ -76,6 +77,7 @@ export class RelicClientInstance<TClient extends RelicClient> {
         this.metadata = metadata;
         this.queryClient = queryClient;
         this.url = url;
+        this.pokeAdapter = pokeAdapter;
 
         this.onOnline = this.onOnline.bind(this);
 
@@ -234,7 +236,6 @@ export class RelicClientInstance<TClient extends RelicClient> {
             mutations,
         });
 
-        this.pull();
         this.invalidatePendingMutations();
     }
 
@@ -328,10 +329,14 @@ export class RelicClientInstance<TClient extends RelicClient> {
 
     setup() {
         window.addEventListener("online", this.onOnline);
+        this.pokeAdapter?.onPoke(() => {
+            this.pull();
+        });
     }
 
     destroy() {
         window.removeEventListener("online", this.onOnline);
+        this.pokeAdapter?.close();
     }
 
     // TODO: remove
@@ -356,6 +361,7 @@ export async function createRelicClient<TClient extends RelicClient>({
     relicClient: TClient;
     // TODO: what if no context
     context: TClient["_"]["context"];
+    // TODO: remove db or sqlite
     db?: SqliteRemoteDatabase<Record<string, unknown>>;
     sqlite?: SqliteDb;
     queryClient: QueryClient;

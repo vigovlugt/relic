@@ -3,6 +3,7 @@ import { RelicDefinition } from "../shared/relic-definition";
 import { RelicContext } from "../shared/relic-definition-builder";
 import { RelicServer } from "./relic-server";
 import { RelicPull, RelicPullBuilder } from "./relic-pull";
+import { RelicPoke, RelicPokeBuilder } from "./relic-poke";
 
 export class RelicServerBuilder<
     TDef extends RelicDefinition = RelicDefinition,
@@ -15,6 +16,7 @@ export class RelicServerBuilder<
         context: TContext;
         tx: TTx;
         puller: RelicPull<TDef["_"]["schema"], TContext, TTx> | undefined;
+        poker: RelicPoke<TContext> | undefined;
     };
 
     public mutation: {
@@ -35,15 +37,21 @@ export class RelicServerBuilder<
         return new RelicPullBuilder<TDef["_"]["schema"], TContext, TTx>();
     }
 
+    get poker() {
+        return new RelicPokeBuilder<TContext>();
+    }
+
     constructor(
         definition: TDef,
-        puller: RelicPull<TDef["_"]["schema"], TContext, TTx> | undefined
+        puller: RelicPull<TDef["_"]["schema"], TContext, TTx> | undefined,
+        poker: RelicPoke<TContext> | undefined
     ) {
         this._ = {
             definition,
             context: undefined as unknown as TContext,
             tx: undefined as unknown as TTx,
             puller,
+            poker,
         };
 
         this.mutation = definition._.mutations as typeof this.mutation;
@@ -52,6 +60,7 @@ export class RelicServerBuilder<
     context<TNewContext extends RelicContext>() {
         return new RelicServerBuilder<TDef, TNewContext, TTx>(
             this._.definition,
+            undefined,
             undefined
         );
     }
@@ -59,14 +68,24 @@ export class RelicServerBuilder<
     transaction<TNewTx>() {
         return new RelicServerBuilder<TDef, TContext, TNewTx>(
             this._.definition,
-            undefined
+            undefined,
+            this._.poker
         );
     }
 
     pull(pull: RelicPull<TDef["_"]["schema"], TContext, TTx>) {
         return new RelicServerBuilder<TDef, TContext, TTx>(
             this._.definition,
-            pull
+            pull,
+            this._.poker
+        );
+    }
+
+    poke(poke: RelicPoke<TContext>) {
+        return new RelicServerBuilder<TDef, TContext, TTx>(
+            this._.definition,
+            this._.puller,
+            poke
         );
     }
 
@@ -88,7 +107,8 @@ export class RelicServerBuilder<
         return new RelicServer<TCtx, TDef["_"]["schema"], TMutations, TTx>(
             this._.definition._.schema,
             mutations,
-            this._.puller
+            this._.puller,
+            this._.poker
         );
     }
 }
@@ -96,5 +116,5 @@ export class RelicServerBuilder<
 export function initRelicServer<TDef extends RelicDefinition>(
     definition: TDef
 ) {
-    return new RelicServerBuilder(definition, undefined);
+    return new RelicServerBuilder(definition, undefined, undefined);
 }

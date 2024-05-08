@@ -8,7 +8,8 @@ export type RelicRequestHandlerOptions<
     relicServer: TServer;
     req: Request;
     database: RelicServerDatabase<TServer["_"]["tx"]>;
-} & (TServer["_"]["context"] extends undefined // Only require context if it's needed
+} & // Only require context if it's needed
+(TServer["_"]["context"] extends Record<string, never>
     ? Record<string, never>
     : { context: TServer["_"]["context"] });
 
@@ -28,8 +29,8 @@ export const relicPushRequest = z.object({
     clientId: z.string(),
 });
 
-export async function relicRequestHandler(
-    opts: RelicRequestHandlerOptions
+export async function relicRequestHandler<TServer extends RelicServer>(
+    opts: RelicRequestHandlerOptions<TServer>
 ): Promise<Response> {
     const parts = opts.req.url.split("/");
     switch (parts[parts.length - 1].toLowerCase()) {
@@ -42,12 +43,12 @@ export async function relicRequestHandler(
     }
 }
 
-async function handlePull({
+async function handlePull<TServer extends RelicServer>({
     relicServer,
     context,
     database,
     req,
-}: RelicRequestHandlerOptions) {
+}: RelicRequestHandlerOptions<TServer>) {
     const body = await req.json();
     const { success, data, error } = relicPullRequest.safeParse(body);
     if (!success) {
@@ -84,12 +85,12 @@ async function handlePull({
     }
 }
 
-async function handlePush({
+async function handlePush<TServer extends RelicServer>({
     relicServer,
     context,
     database,
     req,
-}: RelicRequestHandlerOptions) {
+}: RelicRequestHandlerOptions<TServer>) {
     const body = await req.json();
     const { success, data, error } = relicPushRequest.safeParse(body);
     if (!success) {

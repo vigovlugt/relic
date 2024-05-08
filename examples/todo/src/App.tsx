@@ -19,10 +19,9 @@ function App() {
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
-                        const formData = new FormData(
-                            e.target as HTMLFormElement
-                        );
+                        const formData = new FormData(e.currentTarget);
                         const name = formData.get("name") as string;
+
                         relic.mutate.addTodo({
                             id: crypto.randomUUID(),
                             name,

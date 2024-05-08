@@ -6,7 +6,7 @@ import { relicDefinition as relicDefinition } from "./definition";
 const c = initRelicClient(relicDefinition);
 
 const addTodo = c.mutation.addTodo.mutate(async ({ input, tx }) => {
-    await tx.insert(todos).values(input).returning();
+    await tx.insert(todos).values(input);
 });
 
 const deleteTodo = c.mutation.deleteTodo.mutate(async ({ input, tx }) => {

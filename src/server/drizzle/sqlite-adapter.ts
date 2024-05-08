@@ -4,6 +4,9 @@ import {
     SQLiteColumn,
     SQLiteTableWithColumns,
     SQLiteTransaction,
+    integer,
+    sqliteTable,
+    text,
 } from "drizzle-orm/sqlite-core";
 import { RelicServerDatabase } from "../relic-server-database";
 import { eq } from "drizzle-orm";
@@ -15,7 +18,7 @@ export type ExtractTransaction<
 
 export function sqliteAdapter(
     db: BaseSQLiteDatabase<any, any, any>,
-    clientsTable: SQLiteRelicClientsTable
+    clientsTable: SQLiteRelicClientsTable = DEFAULT_CLIENTS
 ): RelicServerDatabase<SQLiteTransaction<any, any, any, any>> {
     return {
         transaction: async (fn) => {
@@ -40,7 +43,13 @@ export function sqliteAdapter(
                 })
                 .where(eq(clientsTable.id, clientId)),
     };
+    // TODO: Move row version stuff here maybe good idea? Maybe not
 }
+
+const DEFAULT_CLIENTS = sqliteTable("relic_clients", {
+    id: text("id").primaryKey(),
+    mutationId: integer("mutation_id").notNull(),
+});
 
 export type SQLiteRelicClientsTable = SQLiteTableWithColumns<{
     dialect: "sqlite";

@@ -4,6 +4,7 @@ import { relicClient } from "./client.ts";
 import { createSqliteWasmDb } from "../../../../src/sqlite-wasm/index.ts";
 import { drizzle } from "../../../../src/client/database/drizzle.ts";
 import { migrations, schema } from "../db.ts";
+import { ssePokeAdapter } from "../../../../src/client/poke/adapters/sse.ts";
 
 export const queryClient = new QueryClient();
 
@@ -20,4 +21,7 @@ export const relic = await createRelicClient({
     sqlite,
     db,
     url: "http://localhost:3000/relic",
+    pokeAdapter: ssePokeAdapter({
+        url: "http://localhost:3000/relic/poke",
+    }),
 });

@@ -2,13 +2,13 @@ import { InferSelectModel } from "drizzle-orm";
 import {
     RelicContext,
     RelicSchema,
-} from "../../shared/relic-definition-builder";
+} from "../../../shared/relic-definition-builder";
 import {
     RelicPullBuilder,
     RelicPullHandler,
     RelicPullHandlerOptions,
     RelicPullHandlerResult,
-} from "../relic-pull";
+} from "../../relic-pull";
 
 export type RowVersionClientView<TSchema extends RelicSchema> = {
     [K in keyof TSchema]: Record<string, number>;
@@ -51,20 +51,22 @@ export type RowVersionFetchEntitiesFn<
     }
 ) => Promise<RowVersionEntities<TSchema>> | RowVersionEntities<TSchema>;
 
-export type RowVersionDbAdapter<TSchema extends RelicSchema, TTx> = {
+export type RowVersionDbAdapter<TTx> = {
     getClientView: (
         tx: TTx,
         clientId: string,
         viewId: number
-    ) =>
-        | Promise<RowVersionClientView<TSchema> | undefined>
-        | RowVersionClientView<TSchema>
+    ) => // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    | Promise<RowVersionClientView<any> | undefined>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        | RowVersionClientView<any>
         | undefined;
     createClientView: (
         tx: TTx,
         clientId: string,
         viewId: number,
-        view: RowVersionClientView<TSchema>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        view: RowVersionClientView<any>
     ) => Promise<void> | void;
     deleteClientViews: (
         tx: TTx,
@@ -80,7 +82,7 @@ export function rowVersion<
 >(
     // Require pull builder for type inference
     _: RelicPullBuilder<TSchema, TContext, TTx>,
-    db: RowVersionDbAdapter<TSchema, TTx>,
+    db: RowVersionDbAdapter<TTx>,
     fetchView: RowVersionFetchViewFn<TSchema, TContext, TTx>,
     fetchPutEntities: RowVersionFetchEntitiesFn<TSchema, TContext, TTx>
 ) {
@@ -143,7 +145,6 @@ export function rowVersion<
                 },
             ])
         ) as RelicPullHandlerResult<TSchema>["entities"];
-        console.log(pullEntities);
 
         return {
             clear: oldClientView === undefined,
