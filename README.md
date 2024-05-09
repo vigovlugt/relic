@@ -1,1 +1,1 @@
-# RelicJS
+# Relic

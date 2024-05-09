@@ -1,14 +1,13 @@
 import { QueryClient } from "@tanstack/react-query";
-import { createRelicClient } from "../../../../src/client/relic-client-instance.ts";
+import { createRelicClient, drizzle, ssePokeAdapter } from "@relic/client";
 import { relicClient } from "./client.ts";
-import { createSqliteWasmDb } from "../../../../src/sqlite-wasm/index.ts";
-import { drizzle } from "../../../../src/client/database/drizzle.ts";
+import { createSqliteWasmDb } from "@relic/sqlite-wasm";
+import SqliteWasmWorker from "@relic/sqlite-wasm/worker?worker";
 import { migrations, schema } from "../db.ts";
-import { ssePokeAdapter } from "../../../../src/client/poke/adapters/sse.ts";
 
 export const queryClient = new QueryClient();
 
-export const sqlite = await createSqliteWasmDb();
+export const sqlite = await createSqliteWasmDb(new SqliteWasmWorker());
 await sqlite.exec(migrations);
 export const db = drizzle(sqlite, {
     schema,

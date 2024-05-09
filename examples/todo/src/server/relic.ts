@@ -1,8 +1,9 @@
 import { eq, not, inArray } from "drizzle-orm";
-import { rowVersionDrizzleSqliteAdapter } from "../../../../src/server/delta/row-version/drizzle-adapter";
-import { rowVersion } from "../../../../src/server/delta/row-version/row-version";
-import { ExtractTransaction } from "../../../../src/server/drizzle/sqlite-adapter";
-import { initRelicServer } from "../../../../src/server/relic-server-builder";
+import { rowVersion, initRelicServer } from "@relic/server";
+import {
+    rowVersionDrizzleSqliteAdapter,
+    ExtractTransaction,
+} from "@relic/adapter-drizzle";
 import { todos } from "./db";
 import { relicDefinition } from "../relic/definition";
 import { db } from "./server";

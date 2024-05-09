@@ -1,0 +1,44 @@
+{
+    "name": "@relic/server",
+    "version": "0.0.1",
+    "description": "Relic server",
+    "author": "Vigo Vlugt",
+    "license": "MIT",
+    "main": "dist/index.js",
+    "module": "dist/index.mjs",
+    "typings": "dist/index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/vigovlugt/relic.git",
+        "directory": "packages/server"
+    },
+    "scripts": {
+        "build": "tsup",
+        "dev": "pnpm build --watch",
+        "lint": "eslint --cache --ext \".js,.ts,.tsx\" --ignore-path ../../.gitignore src",
+        "ts-watch": "tsc --watch"
+    },
+    "files": [
+        "dist",
+        "src",
+        "README.md",
+        "package.json"
+    ],
+    "peerDependencies": {
+        "@relic/core": "0.0.1",
+        "@tanstack/query-core": "^5.32.1",
+        "drizzle-orm": "^0.30.10",
+        "zod": "^3.23.5"
+    },
+    "devDependencies": {
+        "@relic/core": "0.0.1",
+        "@tanstack/query-core": "^5.32.1",
+        "drizzle-orm": "^0.30.10",
+        "eslint": "^9.2.0",
+        "zod": "^3.23.5",
+        "tsup": "^8.0.2"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

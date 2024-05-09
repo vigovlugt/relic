@@ -1,39 +1,10 @@
 {
-  "name": "@relicjs/relic",
-  "version": "0.0.2",
-  "private": false,
-  "description": "",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
-  "scripts": {
-    "dev": "vitest",
-    "build": "tsup src/index.ts --format cjs,esm --dts",
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint src",
-    "version": "changeset version",
-    "publish": "pnpm run build && changeset publish"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "publishConfig": {
-    "access": "public"
-  },
-  "devDependencies": {
-    "@changesets/cli": "^2.27.1",
-    "@typescript-eslint/eslint-plugin": "^6.19.0",
-    "@typescript-eslint/parser": "^6.19.0",
-    "eslint": "^8.56.0",
-    "tsup": "^8.0.1",
-    "typescript": "^5.3.3",
-    "vitest": "^1.2.0"
-  },
-  "dependencies": {
-    "@sqlite.org/sqlite-wasm": "3.45.3-build1",
-    "@tanstack/query-core": "^5.32.1",
-    "drizzle-orm": "^0.30.10",
-    "zod": "^3.23.5"
-  }
+    "name": "root",
+    "private": "true",
+    "scripts": {
+        "build": "turbo build"
+    },
+    "dependencies": {
+        "turbo": "^1.13.3"
+    }
 }

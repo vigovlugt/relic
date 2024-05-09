@@ -1,4 +1,4 @@
-import { initRelicDefinition } from "../../../../src/shared/relic-definition-builder";
+import { initRelicDefinition } from "@relic/core";
 import z from "zod";
 import { todos } from "../db";
 
