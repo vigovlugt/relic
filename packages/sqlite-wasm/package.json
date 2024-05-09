@@ -27,7 +27,7 @@
     "scripts": {
         "build": "tsup",
         "dev": "pnpm build --watch",
-        "lint": "eslint --cache --ext \".js,.ts,.tsx\" --ignore-path ../../.gitignore src",
+        "type-check": "tsc --noEmit",
         "ts-watch": "tsc --watch"
     },
     "files": [
@@ -41,7 +41,6 @@
     },
     "devDependencies": {
         "@sqlite.org/sqlite-wasm": "3.45.3-build1",
-        "eslint": "^9.2.0",
         "tsup": "^8.0.2"
     },
     "publishConfig": {

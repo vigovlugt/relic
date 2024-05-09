@@ -15,7 +15,7 @@
     "scripts": {
         "build": "tsup",
         "dev": "pnpm build --watch",
-        "lint": "eslint --cache --ext \".js,.ts,.tsx\" --ignore-path ../../.gitignore src",
+        "type-check": "tsc --noEmit",
         "ts-watch": "tsc --watch"
     },
     "files": [
@@ -33,7 +33,6 @@
         "@relic/core": "0.0.1",
         "@tanstack/query-core": "^5.32.1",
         "drizzle-orm": "^0.30.10",
-        "eslint": "^9.2.0",
         "tsup": "^8.0.2"
     },
     "publishConfig": {
