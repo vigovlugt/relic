@@ -27,13 +27,15 @@
     "peerDependencies": {
         "@relic/core": "0.0.1",
         "@tanstack/query-core": "^5.32.1",
-        "drizzle-orm": "^0.30.10"
+        "drizzle-orm": "^0.30.10",
+        "zod": "^3.23.5"
     },
     "devDependencies": {
         "@relic/core": "0.0.1",
         "@tanstack/query-core": "^5.32.1",
         "drizzle-orm": "^0.30.10",
-        "tsup": "^8.0.2"
+        "tsup": "^8.0.2",
+        "zod": "^3.23.5"
     },
     "publishConfig": {
         "access": "public"

@@ -7,7 +7,7 @@ export type RelicPullHandlerOptions<
 > = {
     ctx: TContext;
     tx: TTx;
-    version: string;
+    version: string | null;
     clientId: string;
 };
 

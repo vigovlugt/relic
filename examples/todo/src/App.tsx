@@ -3,10 +3,16 @@ import { db, relic } from "./relic/relic";
 import { todos } from "./db";
 import { desc } from "drizzle-orm";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(window as any).debug = () => relic.debug();
+
 function App() {
     const { data: todoList } = useSuspenseQuery(
-        relic.query(db.select().from(todos).orderBy(desc(todos.createdAt)))
+        relic.query(
+            db.select().from(todos).orderBy(desc(todos.createdAt)).limit(10)
+        )
     );
+    console.timeEnd("addTodo");
 
     // const { data: pendingMutations } = useSuspenseQuery(
     //     relic.pendingMutations()
@@ -22,6 +28,7 @@ function App() {
                         const formData = new FormData(e.currentTarget);
                         const name = formData.get("name") as string;
 
+                        console.time("addTodo");
                         relic.mutate.addTodo({
                             id: crypto.randomUUID(),
                             name,

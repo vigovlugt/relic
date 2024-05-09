@@ -24,7 +24,8 @@
             "@relic/core": ["../../packages/core/src"],
             "@relic/client": ["../../packages/client/src"],
             "@relic/server": ["../../packages/server/src"],
-            "@relic/sqlite-wasm": ["../../packages/sqlite-wasm/src"]
+            "@relic/sqlite-wasm": ["../../packages/sqlite-wasm/src"],
+            "@relic/adapter-drizzle": ["../../packages/adapter-drizzle/src"]
         }
     },
     "include": ["src", "scripts"],

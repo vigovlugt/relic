@@ -115,7 +115,7 @@ export class RelicClientInstance<TClient extends RelicClient> {
                 });
                 if (!res.ok) {
                     throw new Error(
-                        "Failed to push mutations: " + res.statusText
+                        "Failed to pull mutations: " + res.statusText
                     );
                 }
 
@@ -252,7 +252,7 @@ export class RelicClientInstance<TClient extends RelicClient> {
         );
         const pullData = await this.puller({
             clientId: this.id,
-            version,
+            version: version ?? null,
         });
 
         // Get server data

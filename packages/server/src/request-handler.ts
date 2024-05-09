@@ -14,7 +14,7 @@ export type RelicRequestHandlerOptions<
 
 export const relicPullRequest = z.object({
     clientId: z.string(),
-    version: z.string(),
+    version: z.string().nullable(),
 });
 
 export const relicPushRequest = z.object({

@@ -1,6 +1,6 @@
 export type RelicPullRequest = {
     clientId: string;
-    version: string;
+    version: string | null;
 };
 
 export type RelicPullResponse = {

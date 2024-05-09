@@ -84,10 +84,15 @@ export function rowVersion<
     fetchPutEntities: RowVersionFetchEntitiesFn<TSchema, TContext, TTx>
 ) {
     const fn = (async (opts) => {
+        const version = opts.version === null ? 1 : Number(opts.version);
+        const nextVersion = version + 1;
+
         // Get old client view record
         // Get new client view record
         const [oldClientView, newClientViewResult] = await Promise.all([
-            db.getClientView(opts.tx, opts.clientId, +opts.version),
+            opts.version
+                ? db.getClientView(opts.tx, opts.clientId, version)
+                : undefined,
             fetchView(opts),
         ]);
 
@@ -105,11 +110,11 @@ export function rowVersion<
         );
 
         // Return early if no changes
-        if (clientDiffEmpty(diff)) {
+        if (clientDiffEmpty(diff) && oldClientView !== undefined) {
             return {
                 clear: false,
                 entities: {},
-                version: opts.version,
+                version,
             };
         }
 
@@ -122,7 +127,6 @@ export function rowVersion<
         });
 
         // Store new client view record
-        const nextVersion = +opts.version + 1;
         await db.createClientView(
             opts.tx,
             opts.clientId,
@@ -131,7 +135,7 @@ export function rowVersion<
         );
 
         // Do not delete currentClientView, as client may not receive response with new viewId due to network issues
-        await db.deleteClientViews(opts.tx, opts.clientId, nextVersion);
+        await db.deleteClientViews(opts.tx, opts.clientId, nextVersion - 2);
 
         const pullEntities = Object.fromEntries(
             Object.entries(entities).map(([table, v]) => [
