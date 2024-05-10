@@ -30,8 +30,10 @@ export const relic = await createRelicClient({
     context: {},
     sqlite,
     db,
-    url: "http://localhost:3000/relic",
+    url: import.meta.env.VITE_SERVER_URL ?? "http://localhost:3000/relic",
     pokeAdapter: ssePokeAdapter({
-        url: "http://localhost:3000/relic/poke",
+        url: import.meta.env.VITE_SERVER_URL
+            ? import.meta.env.VITE_SERVER_URL + "/poke"
+            : "http://localhost:3000/relic/poke",
     }),
 });
