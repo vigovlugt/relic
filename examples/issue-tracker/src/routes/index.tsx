@@ -85,6 +85,7 @@ function App() {
                         relic.mutate.createIssue({
                             id: crypto.randomUUID(),
                             title: title,
+                            priority: "urgent",
                         });
 
                         (e.target as HTMLFormElement).reset();
@@ -137,6 +138,7 @@ function App() {
                             <th>Status</th>
                             <th>Title</th>
                             <th>Last Modified</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -145,13 +147,13 @@ function App() {
                                 <td>
                                     <select
                                         value={issue.priority}
-                                        onChange={(e) => {
+                                        onChange={(e) =>
                                             relic.mutate.updateIssue({
                                                 id: issue.id,
                                                 priority: e.currentTarget
                                                     .value as typeof issue.priority,
-                                            });
-                                        }}
+                                            })
+                                        }
                                     >
                                         <option value="none">None</option>
                                         <option value="urgent">Urgent</option>
@@ -211,6 +213,15 @@ function App() {
                                         dateStyle: "short",
                                         timeStyle: "medium",
                                     }).format(issue.modifiedAt)}
+                                </td>
+                                <td>
+                                    <button
+                                        onClick={() =>
+                                            relic.mutate.deleteIssue(issue.id)
+                                        }
+                                    >
+                                        Delete
+                                    </button>
                                 </td>
                             </tr>
                         ))}

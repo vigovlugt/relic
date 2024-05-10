@@ -11,8 +11,9 @@ db.transaction((tx) => {
         const id = crypto.randomUUID();
         tx.insert(issues)
             .values({
-                id: id,
+                id,
                 title: faker.word.words(),
+                description: faker.lorem.paragraphs(),
                 status: ["backlog", "todo", "in_progress", "done", "cancelled"][
                     Math.floor(Math.random() * 5)
                 ],

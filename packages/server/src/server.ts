@@ -31,7 +31,7 @@ export class RelicServer<
         RelicMutation<TContext, RelicMutationInput>
     >,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    TTx = any
+    TTx = any,
 > {
     public _: {
         schema: TSchema;
@@ -131,15 +131,25 @@ export class RelicServer<
                 );
 
                 // Validate input against input schema
-                const parsedInput = mutation._.input?.parse(input);
-
-                // TODO: handle errors, either nested transaction, or redo transactionw without executing mutation
-                // Execute mutation
-                await mutation._.handler({
-                    tx,
-                    input: parsedInput,
-                    ctx: context,
-                });
+                const parsedInput = mutation._.input?.safeParse(input) ?? {
+                    success: true,
+                    data: undefined,
+                };
+                if (parsedInput.success) {
+                    // TODO: handle errors, either nested transaction, or redo transactionw without executing mutation
+                    // Execute mutation
+                    await mutation._.handler({
+                        tx,
+                        input: parsedInput.data,
+                        ctx: context,
+                    });
+                } else {
+                    console.error(
+                        `Mutation ${id} input validation failed:`,
+                        parsedInput.error.errors,
+                        "- skipping"
+                    );
+                }
 
                 // Update client mutationId
                 await database.updateClient(tx, request.clientId, nextMutation);

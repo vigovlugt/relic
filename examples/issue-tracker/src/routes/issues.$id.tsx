@@ -97,6 +97,7 @@ function Issue() {
                     </tr>
                 </tbody>
             </table>
+            <p style={{ whiteSpace: "pre-wrap" }}>{issue.description}</p>
             <form
                 onSubmit={(e) => {
                     e.preventDefault();
@@ -113,7 +114,7 @@ function Issue() {
                 }}
             >
                 <h2>New comment</h2>
-                <textarea name="body"></textarea>
+                <textarea name="body" style={{ display: "block" }}></textarea>
                 <button type="submit">Post</button>
             </form>
             <div>
@@ -121,7 +122,9 @@ function Issue() {
                 <ul>
                     {issue.comments.map((comment) => (
                         <li key={comment.id}>
-                            <pre>{comment.body}</pre>
+                            <p style={{ whiteSpace: "pre-wrap" }}>
+                                {comment.body}
+                            </p>
                             <button
                                 onClick={() =>
                                     relic.mutate.updateComment({
