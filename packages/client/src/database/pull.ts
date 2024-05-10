@@ -42,15 +42,17 @@ export async function applyPullData(
                     );
                 }
 
-                for (const row of rowsToDelete) {
-                    const sql = `DELETE FROM ${name} WHERE ${pk.columns
-                        .map((c) => `${c.name} = ?`)
-                        .join(" AND ")}`;
-                    const params = pk.columns.map((c) =>
-                        transformValue(c, row[jsonNameByDbName[c.name]])
-                    );
-                    await db.exec(sql, params);
-                }
+                await Promise.all(
+                    rowsToDelete.map(async (row) => {
+                        const sql = `DELETE FROM ${name} WHERE ${pk.columns
+                            .map((c) => `${c.name} = ?`)
+                            .join(" AND ")}`;
+                        const params = pk.columns.map((c) =>
+                            transformValue(c, row[jsonNameByDbName[c.name]])
+                        );
+                        await db.exec(sql, params);
+                    })
+                );
             } else {
                 // Single primary keys are values
                 const rowsToDelete = rows.delete as unknown[];
@@ -60,26 +62,31 @@ export async function applyPullData(
                     throw new Error(`Table ${name} has no primary key`);
                 }
 
-                for (const row of rowsToDelete) {
-                    // TODO: make composite primary keys possible
-                    const sql = `DELETE FROM ${name} WHERE ${pkColumn.name} = ?`;
-                    const params = [transformValue(pkColumn, row)];
-                    await db.exec(sql, params);
-                }
+                await Promise.all(
+                    rowsToDelete.map(async (row) => {
+                        const sql = `DELETE FROM ${name} WHERE ${pkColumn.name} = ?`;
+                        const params = [transformValue(pkColumn, row)];
+                        await db.exec(sql, params);
+                    })
+                );
             }
         }
 
         // Insert or replace new and updated rows
         // TODO: batch to avoid worker <-> main thread overhead
-        for (const row of rows.put) {
-            const sql = `INSERT OR REPLACE INTO ${name} (${table.columns
-                .map((c) => c.name)
-                .join(", ")}) VALUES (${columns.map(() => "?").join(", ")})`;
-            const params = columns.map((c) =>
-                transformValue(c, row[jsonNameByDbName[c.name]])
-            );
-            await db.exec(sql, params);
-        }
+        await Promise.all(
+            rows.put.map(async (row) => {
+                const sql = `INSERT OR REPLACE INTO ${name} (${columns
+                    .map((c) => c.name)
+                    .join(", ")}) VALUES (${columns
+                    .map(() => "?")
+                    .join(", ")})`;
+                const params = columns.map((c) =>
+                    transformValue(c, row[jsonNameByDbName[c.name]])
+                );
+                await db.exec(sql, params);
+            })
+        );
     }
 }
 
