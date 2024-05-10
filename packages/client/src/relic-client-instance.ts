@@ -4,7 +4,7 @@ import { SqliteRemoteDatabase } from "drizzle-orm/sqlite-proxy";
 import { MutationQueue } from "./database/mutation-queue";
 import { SqliteDb } from "./database";
 import { drizzle } from "./database/drizzle";
-import { QueryClient, QueryOptions } from "@tanstack/query-core";
+import { QueryClient } from "@tanstack/query-core";
 import { RollbackManager } from "./database/rollback";
 import { Mutex } from "./mutex";
 import { MetadataManager } from "./database/metadata";
@@ -168,7 +168,7 @@ export class RelicClientInstance<TClient extends RelicClient> {
         TQuery extends {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             execute: () => Promise<any>;
-        }
+        },
     >(query: TQuery): Promise<Awaited<ReturnType<TQuery["execute"]>>> {
         return await this.dbMutex.withLock(async () => await query.execute());
     }
@@ -181,15 +181,17 @@ export class RelicClientInstance<TClient extends RelicClient> {
             };
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             execute: () => Promise<any>;
-        }
+        },
     >(query: TQuery) {
         const { sql, params } = query.toSQL();
 
         return {
             queryFn: () => this.fetchQuery(query),
             queryKey: ["_relic", this.id, "queries", sql, params],
-            networkMode: "offlineFirst",
-        } satisfies QueryOptions;
+            networkMode: "always",
+            // Will never get stale, as stale data is invalidated
+            staleTime: Infinity,
+        } as const;
     }
 
     private async invalidateQueries() {
@@ -209,8 +211,10 @@ export class RelicClientInstance<TClient extends RelicClient> {
                     async () => await this.mutationQueue.getAll()
                 ),
             queryKey: ["_relic", this.id, "pendingMutations"],
-            networkMode: "offlineFirst",
-        } satisfies QueryOptions;
+            networkMode: "always",
+            // Will never get stale, as stale data is invalidated
+            staleTime: Infinity,
+        } as const;
     }
 
     private async invalidatePendingMutations() {

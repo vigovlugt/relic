@@ -25,7 +25,7 @@ export type RowVersionFetchViewResult<TSchema extends RelicSchema> = {
 export type RowVersionFetchViewFn<
     TSchema extends RelicSchema,
     TContext extends RelicContext,
-    TTx
+    TTx,
 > = (
     opts: RelicPullHandlerOptions<TContext, TTx>
 ) =>
@@ -39,7 +39,7 @@ export type RowVersionEntities<TSchema extends RelicSchema> = {
 export type RowVersionFetchEntitiesFn<
     TSchema extends RelicSchema,
     TContext extends RelicContext,
-    TTx
+    TTx,
 > = (
     opts: RelicPullHandlerOptions<TContext, TTx> & {
         entities: {
@@ -58,7 +58,7 @@ export type RowVersionDbAdapter<TTx> = {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         | RowVersionClientView<any>
         | undefined;
-    createClientView: (
+    putClientView: (
         tx: TTx,
         clientId: string,
         viewId: number,
@@ -75,7 +75,7 @@ export type RowVersionDbAdapter<TTx> = {
 export function rowVersion<
     TSchema extends RelicSchema,
     TContext extends RelicContext,
-    TTx
+    TTx,
 >(
     // Require pull builder for type inference
     _: RelicPullBuilder<TSchema, TContext, TTx>,
@@ -127,7 +127,7 @@ export function rowVersion<
         });
 
         // Store new client view record
-        await db.createClientView(
+        await db.putClientView(
             opts.tx,
             opts.clientId,
             nextVersion,

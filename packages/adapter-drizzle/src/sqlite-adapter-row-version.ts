@@ -37,13 +37,19 @@ export function rowVersionDrizzleSqliteAdapter() {
                 .get()?.view;
             return str ? JSON.parse(str) : undefined;
         },
-        createClientView: async (tx, clientId, viewId, view) => {
+        putClientView: async (tx, clientId, viewId, view) => {
             await tx
                 .insert(clientViews)
                 .values({
                     clientId,
                     viewId,
                     view: JSON.stringify(view),
+                })
+                .onConflictDoUpdate({
+                    target: [clientViews.clientId, clientViews.viewId],
+                    set: {
+                        view: JSON.stringify(view),
+                    },
                 })
                 .execute();
         },
