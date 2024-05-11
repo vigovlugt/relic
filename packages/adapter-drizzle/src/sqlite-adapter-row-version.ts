@@ -1,67 +1,48 @@
 import {
     SQLiteTransaction,
     integer,
-    primaryKey,
     sqliteTable,
     text,
 } from "drizzle-orm/sqlite-core";
 import { RowVersionDbAdapter } from "@relic/server";
-import { and, eq, lte } from "drizzle-orm";
+import { eq, lt, sql } from "drizzle-orm";
 
-const clientViews = sqliteTable(
-    "relic_client_views",
-    {
-        clientId: text("client_id").notNull(),
-        viewId: integer("view_id").notNull(),
-        view: text("view").notNull(),
-    },
-    (t) => ({
-        pk: primaryKey({
-            columns: [t.clientId, t.viewId],
-        }),
-    })
-);
+const clientViews = sqliteTable("relic_client_views", {
+    id: text("id").primaryKey(),
+    createdAt: integer("created_at", {
+        mode: "timestamp",
+    }).default(sql`(cast((julianday('now') - 2440587.5)*86400000 as integer))`),
+    data: text("data").notNull(),
+});
+
+function minusDays(date: Date, days: number) {
+    const result = new Date(date);
+    result.setDate(result.getDate() - days);
+    return result;
+}
 
 export function rowVersionDrizzleSqliteAdapter() {
     return {
-        getClientView: async (tx, clientId, viewId) => {
+        getClientView: async (tx, id) => {
             const str = await tx
                 .select()
                 .from(clientViews)
-                .where(
-                    and(
-                        eq(clientViews.clientId, clientId),
-                        eq(clientViews.viewId, viewId)
-                    )
-                )
+                .where(eq(clientViews.id, id))
                 .get()?.view;
             return str ? JSON.parse(str) : undefined;
         },
-        putClientView: async (tx, clientId, viewId, view) => {
-            await tx
-                .insert(clientViews)
-                .values({
-                    clientId,
-                    viewId,
-                    view: JSON.stringify(view),
-                })
-                .onConflictDoUpdate({
-                    target: [clientViews.clientId, clientViews.viewId],
-                    set: {
-                        view: JSON.stringify(view),
-                    },
-                })
-                .execute();
+        createClientView: async (tx, id, view) => {
+            await tx.insert(clientViews).values({
+                id,
+                data: JSON.stringify(view),
+            });
         },
-        deleteClientViews: async (tx, clientId: string, maxViewId: number) => {
+        deleteClientViews: async (tx) => {
+            // Delete all client views older than 7 days
+            // Not perfect, but good enough
             await tx
                 .delete(clientViews)
-                .where(
-                    and(
-                        eq(clientViews.clientId, clientId),
-                        lte(clientViews.viewId, maxViewId)
-                    )
-                );
+                .where(lt(clientViews.createdAt, minusDays(new Date(), 7)));
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as RowVersionDbAdapter<SQLiteTransaction<any, any, any, any>>;

@@ -48,28 +48,23 @@ export type RowVersionFetchEntitiesFn<
     }
 ) => Promise<RowVersionEntities<TSchema>> | RowVersionEntities<TSchema>;
 
+// TODO: TTx should not be included, should be outside TX
 export type RowVersionDbAdapter<TTx> = {
     getClientView: (
         tx: TTx,
-        clientId: string,
-        viewId: number
+        id: string
     ) => // eslint-disable-next-line @typescript-eslint/no-explicit-any
     | Promise<RowVersionClientView<any> | undefined>
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         | RowVersionClientView<any>
         | undefined;
-    putClientView: (
+    createClientView: (
         tx: TTx,
-        clientId: string,
-        viewId: number,
+        id: string,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        view: RowVersionClientView<any>
+        data: RowVersionClientView<any>
     ) => Promise<void> | void;
-    deleteClientViews: (
-        tx: TTx,
-        clientId: string,
-        maxViewId: number
-    ) => Promise<void> | void;
+    deleteClientViews: (tx: TTx) => Promise<void> | void;
 };
 
 export function rowVersion<
@@ -84,15 +79,10 @@ export function rowVersion<
     fetchPutEntities: RowVersionFetchEntitiesFn<TSchema, TContext, TTx>
 ) {
     const fn = (async (opts) => {
-        const version = opts.version === null ? 1 : Number(opts.version);
-        const nextVersion = version + 1;
-
         // Get old client view record
         // Get new client view record
         const [oldClientView, newClientViewResult] = await Promise.all([
-            opts.version
-                ? db.getClientView(opts.tx, opts.clientId, version)
-                : undefined,
+            opts.version ? db.getClientView(opts.tx, opts.version) : undefined,
             fetchView(opts),
         ]);
 
@@ -114,7 +104,7 @@ export function rowVersion<
             return {
                 clear: false,
                 entities: {},
-                version,
+                version: opts.version,
             };
         }
 
@@ -127,15 +117,12 @@ export function rowVersion<
         });
 
         // Store new client view record
-        await db.putClientView(
-            opts.tx,
-            opts.clientId,
-            nextVersion,
-            newClientView
-        );
+        const newViewId = crypto.randomUUID();
+        // TODO: move this out of tx
+        await db.createClientView(opts.tx, newViewId, newClientView);
 
-        // Do not delete currentClientView, as client may not receive response with new viewId due to network issues
-        await db.deleteClientViews(opts.tx, opts.clientId, nextVersion - 2);
+        // Delete old client views
+        await db.deleteClientViews(opts.tx);
 
         const pullEntities = Object.fromEntries(
             Object.entries(entities).map(([table, v]) => [
@@ -150,7 +137,7 @@ export function rowVersion<
         return {
             clear: oldClientView === undefined,
             entities: pullEntities,
-            version: String(nextVersion),
+            version: newViewId,
         };
     }) as RelicPullHandler<TSchema, TContext, TTx>;
 
