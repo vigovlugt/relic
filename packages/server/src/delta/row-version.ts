@@ -108,12 +108,14 @@ export function rowVersion<
             };
         }
 
+        const putEntities = Object.fromEntries(
+            Object.entries(diff).map(([table, v]) => [table, v.put])
+        ) as { [K in keyof TSchema]: string[] };
+
         // Fetch changedEntities
         const entities = await fetchPutEntities({
             ...opts,
-            entities: Object.fromEntries(
-                Object.entries(diff).map(([table, v]) => [table, v.put])
-            ) as { [K in keyof TSchema]: string[] },
+            entities: putEntities,
         });
 
         // Store new client view record

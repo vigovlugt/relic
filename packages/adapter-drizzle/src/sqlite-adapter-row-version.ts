@@ -24,12 +24,18 @@ function minusDays(date: Date, days: number) {
 export function rowVersionDrizzleSqliteAdapter() {
     return {
         getClientView: async (tx, id) => {
-            const str = await tx
-                .select()
+            const data = await tx
+                .select({ data: clientViews.data })
                 .from(clientViews)
                 .where(eq(clientViews.id, id))
-                .get()?.view;
-            return str ? JSON.parse(str) : undefined;
+                .limit(1)
+                .execute();
+
+            if (data.length === 0) {
+                return undefined;
+            }
+
+            return JSON.parse(data[0]!.data);
         },
         createClientView: async (tx, id, view) => {
             await tx.insert(clientViews).values({
