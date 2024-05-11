@@ -14,12 +14,18 @@ db.transaction((tx) => {
                 id,
                 title: faker.word.words(),
                 description: faker.lorem.paragraphs(),
-                status: ["backlog", "todo", "in_progress", "done", "cancelled"][
-                    Math.floor(Math.random() * 5)
-                ],
-                priority: ["none", "urgent", "high", "medium", "low"][
-                    Math.floor(Math.random() * 5)
-                ],
+                status: (
+                    [
+                        "backlog",
+                        "todo",
+                        "in_progress",
+                        "done",
+                        "cancelled",
+                    ] as const
+                )[Math.floor(Math.random() * 5)],
+                priority: (
+                    ["none", "urgent", "high", "medium", "low"] as const
+                )[Math.floor(Math.random() * 5)],
             })
             .execute();
 

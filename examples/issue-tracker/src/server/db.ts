@@ -1,29 +1,18 @@
 import { sql } from "drizzle-orm";
-import {
-    text,
-    primaryKey,
-    integer,
-    sqliteTable,
-} from "drizzle-orm/sqlite-core";
+import { text, integer, sqliteTable } from "drizzle-orm/sqlite-core";
 
 export const clients = sqliteTable("relic_clients", {
     id: text("id").primaryKey(),
     mutationId: integer("mutation_id").notNull(),
 });
 
-export const clientViews = sqliteTable(
-    "relic_client_views",
-    {
-        clientId: text("client_id").notNull(),
-        viewId: integer("view_id").notNull(),
-        view: text("view").notNull(),
-    },
-    (t) => ({
-        pk: primaryKey({
-            columns: [t.clientId, t.viewId],
-        }),
-    })
-);
+export const clientViews = sqliteTable("relic_client_views", {
+    id: text("id").primaryKey(),
+    createdAt: integer("created_at", {
+        mode: "timestamp",
+    }).default(sql`(cast((julianday('now') - 2440587.5)*86400000 as integer))`),
+    data: text("data").notNull(),
+});
 
 const version = () =>
     integer("version")
@@ -86,10 +75,9 @@ CREATE TABLE IF NOT EXISTS relic_clients (
 );
 
 CREATE TABLE IF NOT EXISTS relic_client_views (
-    client_id TEXT NOT NULL,
-    view_id INTEGER NOT NULL,
-    view TEXT NOT NULL,
-    PRIMARY KEY (client_id, view_id)
+    id TEXT PRIMARY KEY,
+    created_at INTEGER NOT NULL DEFAULT (cast((julianday('now') - 2440587.5)*86400000 as integer)),
+    data TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS issues (
