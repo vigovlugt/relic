@@ -4,7 +4,7 @@ export type SsePokeAdapterOptions = {
     url: string;
 };
 
-export function ssePokeAdapter({ url }: SsePokeAdapterOptions): PokeAdapter {
+export function ssePoker({ url }: SsePokeAdapterOptions): PokeAdapter {
     const eventSource = new EventSource(url);
 
     return {

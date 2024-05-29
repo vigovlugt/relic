@@ -51,6 +51,15 @@ function batch<T>(array: T[], size: number = 999) {
     return batches;
 }
 
+async function mapBatched<T, U>(
+    array: T[],
+    callback: (batch: T[]) => Promise<U[]>,
+    size?: number
+) {
+    const results = await Promise.all(batch(array, size).map(callback));
+    return results.flat();
+}
+
 const puller = s.puller.pull(
     rowVersion(
         s.puller,
@@ -73,28 +82,22 @@ const puller = s.puller.pull(
         },
         async ({ tx, entities }) => {
             return {
-                issues: (
-                    await Promise.all(
-                        batch(entities.issues).map(
-                            async (batch) =>
-                                await tx
-                                    .select()
-                                    .from(issues)
-                                    .where(inArray(issues.id, batch))
-                        )
-                    )
-                ).flat(),
-                comments: (
-                    await Promise.all(
-                        batch(entities.comments).map(
-                            async (batch) =>
-                                await tx
-                                    .select()
-                                    .from(comments)
-                                    .where(inArray(comments.id, batch))
-                        )
-                    )
-                ).flat(),
+                issues: await mapBatched(
+                    entities.issues,
+                    async (batch) =>
+                        await tx
+                            .select()
+                            .from(issues)
+                            .where(inArray(issues.id, batch))
+                ),
+                comments: await mapBatched(
+                    entities.comments,
+                    async (batch) =>
+                        await tx
+                            .select()
+                            .from(comments)
+                            .where(inArray(comments.id, batch))
+                ),
             };
         }
     )

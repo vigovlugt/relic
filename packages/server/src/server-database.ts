@@ -10,10 +10,10 @@ export type RelicServerDatabase<TTx = any> = {
         tx: TTx,
         clientId: string
     ) => Promise<RelicServerDatabaseClient | undefined>;
+    createClient: (tx: TTx, clientId: string) => Promise<void>;
     updateClient: (
         tx: TTx,
         clientId: string,
         mutationId: number
     ) => Promise<void>;
-    createClient: (tx: TTx, clientId: string) => Promise<void>;
 };

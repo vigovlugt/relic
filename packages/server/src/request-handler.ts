@@ -3,7 +3,7 @@ import z from "zod";
 import { RelicServerDatabase } from "./server-database";
 
 export type RelicRequestHandlerOptions<
-    TServer extends RelicServer = RelicServer
+    TServer extends RelicServer = RelicServer,
 > = {
     relicServer: TServer;
     req: Request;
@@ -28,7 +28,7 @@ export const relicPushRequest = z.object({
     clientId: z.string(),
 });
 
-export async function relicRequestHandler<TServer extends RelicServer>(
+export async function handleRelicRequest<TServer extends RelicServer>(
     opts: RelicRequestHandlerOptions<TServer>
 ): Promise<Response> {
     const parts = opts.req.url.split("/");

@@ -25,7 +25,7 @@ export type RelicVanillaClientOptions = {
     pusher?: RelicPusher;
     puller?: RelicPuller;
     url: string;
-    pokeAdapter?: RelicPokeAdapter;
+    poker?: RelicPokeAdapter;
 };
 
 export class RelicClientInstance<TClient extends RelicClient> {
@@ -66,7 +66,7 @@ export class RelicClientInstance<TClient extends RelicClient> {
         rollbackManager: RollbackManager,
         metadata: MetadataManager,
         queryClient: QueryClient,
-        { pusher, puller, url, pokeAdapter }: RelicVanillaClientOptions
+        { pusher, puller, url, poker: pokeAdapter }: RelicVanillaClientOptions
     ) {
         this.id = id;
         this.dbMutex = new Mutex();

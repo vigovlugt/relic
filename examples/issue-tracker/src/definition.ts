@@ -1,30 +1,25 @@
 import { initRelicDefinition } from "@relic/core";
-import { schema, issues, comments } from "./db";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { schema, issues, comments, PRIORITIES, STATUSES } from "./db";
+import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 const d = initRelicDefinition().schema(schema);
 const mutation = d.mutation;
 
 const insertIssueSchema = createInsertSchema(issues);
-const updateIssueSchema = createSelectSchema(issues)
-    .omit({ id: true, createdAt: true, modifiedAt: true })
-    .partial()
-    .merge(
-        z.object({
-            id: z.string(),
-        })
-    );
+const updateIssueSchema = z.object({
+    title: z.string().optional(),
+    description: z.string().optional(),
+    priority: z.enum(PRIORITIES).optional(),
+    status: z.enum(STATUSES).optional(),
+    id: z.string(),
+});
 
 const insertCommentSchema = createInsertSchema(comments);
-const updateCommentSchema = createSelectSchema(comments)
-    .omit({ id: true, issueId: true, createdAt: true })
-    .partial()
-    .merge(
-        z.object({
-            id: z.string(),
-        })
-    );
+const updateCommentSchema = z.object({
+    id: z.string(),
+    body: z.string().optional(),
+});
 
 export const relicDefinition = d.mutations({
     createIssue: mutation.input(insertIssueSchema),

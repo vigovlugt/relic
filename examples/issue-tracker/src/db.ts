@@ -1,6 +1,17 @@
 import { relations, sql } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
+export const PRIORITIES = ["none", "urgent", "high", "medium", "low"] as const;
+export const STATUSES = [
+    "backlog",
+    "todo",
+    "in_progress",
+    "done",
+    "cancelled",
+] as const;
+export type Priority = (typeof PRIORITIES)[number];
+export type Status = (typeof STATUSES)[number];
+
 export const issues = sqliteTable("issues", {
     id: text("id").primaryKey(),
     createdAt: integer("created_at", {
@@ -16,12 +27,12 @@ export const issues = sqliteTable("issues", {
     title: text("title").notNull(),
     description: text("description").notNull().default(""),
     priority: text("priority", {
-        enum: ["none", "urgent", "high", "medium", "low"],
+        enum: PRIORITIES,
     })
         .notNull()
         .default("none"),
     status: text("status", {
-        enum: ["backlog", "todo", "in_progress", "done", "cancelled"],
+        enum: STATUSES,
     })
         .notNull()
         .default("backlog"),

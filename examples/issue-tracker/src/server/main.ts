@@ -4,11 +4,11 @@ import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import Database from "better-sqlite3";
-import { relicRequestHandler } from "@relic/server";
+import { handleRelicRequest } from "@relic/server";
 import { sqliteAdapter } from "@relic/adapter-drizzle";
 import { EventEmitter } from "events";
 import { migrations, schema } from "./db";
-import { relicServer } from "./relic";
+import { relicServer } from "./server";
 
 export const sqlite = new Database("sqlite.db");
 export const db = drizzle(sqlite, {
@@ -22,7 +22,7 @@ const pokeEmitter = new EventEmitter();
 const app = new Hono();
 app.use("*", cors());
 app.post("/relic/*", async (c) =>
-    relicRequestHandler({
+    handleRelicRequest({
         relicServer,
         req: c.req.raw,
         context: {
