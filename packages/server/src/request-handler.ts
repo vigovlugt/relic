@@ -31,8 +31,9 @@ export const relicPushRequest = z.object({
 export async function handleRelicRequest<TServer extends RelicServer>(
     opts: RelicRequestHandlerOptions<TServer>
 ): Promise<Response> {
-    const parts = opts.req.url.split("/");
-    switch (parts[parts.length - 1]?.toLowerCase()) {
+    const url = new URL(opts.req.url);
+    const parts = url.pathname.split("/");
+    switch (parts.at(-1)?.toLowerCase()) {
         case "push":
             return handlePush(opts);
         case "pull":

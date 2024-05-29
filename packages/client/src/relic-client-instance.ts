@@ -3,7 +3,6 @@ import { RelicClient } from "./relic-client";
 import { SqliteRemoteDatabase } from "drizzle-orm/sqlite-proxy";
 import { MutationQueue } from "./database/mutation-queue";
 import { SqliteDb } from "./database";
-import { drizzle } from "./database/drizzle";
 import { QueryClient } from "@tanstack/query-core";
 import { RollbackManager } from "./database/rollback";
 import { Mutex } from "./mutex";
@@ -358,22 +357,20 @@ export class RelicClientInstance<TClient extends RelicClient> {
 // TODO: refactor
 export async function createRelicClient<TClient extends RelicClient>({
     relicClient,
-    context,
     db,
     sqlite,
     queryClient,
     ...options
 }: {
     relicClient: TClient;
-    // TODO: what if no context
-    context: TClient["_"]["context"];
-    // TODO: remove db or sqlite
-    db?: SqliteRemoteDatabase<Record<string, unknown>>;
+    db: SqliteRemoteDatabase<Record<string, unknown>>;
     sqlite: SqliteDb;
     queryClient: QueryClient;
-} & RelicVanillaClientOptions) {
-    db = db ?? drizzle(sqlite);
-
+} & RelicVanillaClientOptions &
+    // Only require context if the client has a context
+    (TClient["_"]["context"] extends Record<string, never>
+        ? {}
+        : { context: TClient["_"]["context"] })) {
     const mutationQueue = new MutationQueue(sqlite, "_relic_mutation_queue");
     const rollbackManager = new RollbackManager(sqlite, "_relic_rollback_log");
     const metadata = new MetadataManager(sqlite, "_relic_metadata");
@@ -389,7 +386,9 @@ export async function createRelicClient<TClient extends RelicClient>({
     const newClient = new RelicClientInstance(
         clientId,
         relicClient,
-        context,
+        ("context" in options
+            ? options.context
+            : undefined) as TClient["_"]["context"],
         sqlite,
         db,
         mutationQueue,

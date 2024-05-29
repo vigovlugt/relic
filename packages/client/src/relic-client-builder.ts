@@ -17,7 +17,7 @@ export type ClientTx = SQLiteTransaction<
 >;
 export class RelicClientBuilder<
     TDef extends RelicDefinition = RelicDefinition,
-    TContext extends RelicContext = RelicContext
+    TContext extends RelicContext = Record<string, never>,
 > {
     public _: {
         definition: TDef;
@@ -58,7 +58,7 @@ export class RelicClientBuilder<
                 TCtx,
                 TDef["_"]["mutations"][K]["_"]["input"]
             >;
-        }
+        },
     >(mutations: TMutations) {
         return new RelicClient<TCtx, TDef["_"]["schema"], TMutations>(
             this._.definition._.schema,

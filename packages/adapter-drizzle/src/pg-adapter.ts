@@ -1,30 +1,31 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-    BaseSQLiteDatabase,
-    SQLiteColumn,
-    SQLiteTableWithColumns,
-    SQLiteTransaction,
-    integer,
-    sqliteTable,
-    text,
-} from "drizzle-orm/sqlite-core";
 import { RelicServerDatabase } from "@relic/server";
 import { eq } from "drizzle-orm";
+import {
+    PgColumn,
+    PgDatabase,
+    PgTableWithColumns,
+    PgTransaction,
+    integer,
+    pgTable,
+    uuid,
+} from "drizzle-orm/pg-core";
 
-export function sqliteAdapter(
-    db: BaseSQLiteDatabase<any, any, any>,
-    clientsTable: SQLiteRelicClientsTable = DEFAULT_CLIENTS
-): RelicServerDatabase<SQLiteTransaction<any, any, any, any>> {
+export function postgresAdapter(
+    db: PgDatabase<any, any, any>,
+    clientsTable: PgRelicClientsTable = DEFAULT_CLIENTS
+): RelicServerDatabase<PgTransaction<any, any, any>> {
     return {
         transaction: async (fn) => {
             return await db.transaction(fn);
         },
         getClient: async (tx, clientId) =>
-            await tx
-                .select()
-                .from(clientsTable)
-                .where(eq(clientsTable.id, clientId))
-                .get(),
+            (
+                await tx
+                    .select()
+                    .from(clientsTable)
+                    .where(eq(clientsTable.id, clientId))
+            ).at(0),
         createClient: async (tx, clientId) =>
             await tx.insert(clientsTable).values({
                 id: clientId,
@@ -38,18 +39,17 @@ export function sqliteAdapter(
                 })
                 .where(eq(clientsTable.id, clientId)),
     };
-    // TODO: Move row version stuff here maybe good idea? Maybe not
 }
 
-const DEFAULT_CLIENTS = sqliteTable("relic_clients", {
-    id: text("id").primaryKey(),
+const DEFAULT_CLIENTS = pgTable("relic_clients", {
+    id: uuid("id").primaryKey(),
     mutationId: integer("mutation_id").notNull(),
 });
 
-export type SQLiteRelicClientsTable = SQLiteTableWithColumns<{
-    dialect: "sqlite";
+export type PgRelicClientsTable = PgTableWithColumns<{
+    dialect: "pg";
     columns: {
-        id: SQLiteColumn<
+        id: PgColumn<
             {
                 name: any;
                 tableName: any;
@@ -64,7 +64,7 @@ export type SQLiteRelicClientsTable = SQLiteTableWithColumns<{
             },
             object
         >;
-        mutationId: SQLiteColumn<
+        mutationId: PgColumn<
             {
                 name: any;
                 tableName: any;

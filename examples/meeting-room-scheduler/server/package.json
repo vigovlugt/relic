@@ -1,0 +1,21 @@
+{
+  "name": "@mrs/server",
+  "scripts": {
+    "dev": "tsx watch src/index.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.11.1",
+    "@mrs/shared": "*",
+    "@relic/adapter-drizzle": "^0.0.1",
+    "@relic/server": "^0.0.1",
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.30.10",
+    "hono": "^4.4.0",
+    "pg": "^8.11.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.17",
+    "@types/pg": "^8.11.6",
+    "tsx": "^4.7.1"
+  }
+}
