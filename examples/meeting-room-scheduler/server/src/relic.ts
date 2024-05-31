@@ -9,38 +9,52 @@ import { reservations, rooms } from "./db";
 import { eq, inArray, lt, gt, and, or } from "drizzle-orm";
 import EventEmitter from "events";
 
+type Tx = ExtractTransaction<typeof db>;
+
 const s = initRelicServer(relicDefinition)
-    .transaction<ExtractTransaction<typeof db>>()
+    .transaction<Tx>()
     .context<{ user: string; pokeEmitter: EventEmitter }>();
+
+async function getConflictingReservations(
+    tx: Tx,
+    roomId: string,
+    start: Date,
+    end: Date
+) {
+    return await tx
+        .select()
+        .from(reservations)
+        .where(
+            and(
+                eq(reservations.roomId, roomId),
+                or(
+                    and(
+                        lt(reservations.start, new Date(end)),
+                        gt(reservations.end, new Date(start))
+                    ),
+                    and(
+                        eq(reservations.start, new Date(end)),
+                        eq(reservations.end, new Date(start))
+                    )
+                )
+            )
+        );
+}
 
 const createReservation = s.mutation.createReservation.mutate(
     async ({ tx, input, ctx }) => {
-        const conflictingReservations = await tx
-            .select()
-            .from(reservations)
-            .where(
-                and(
-                    eq(reservations.roomId, input.roomId),
-                    or(
-                        and(
-                            lt(reservations.start, new Date(input.end)),
-                            gt(reservations.end, new Date(input.start))
-                        ),
-                        and(
-                            eq(reservations.start, new Date(input.end)),
-                            eq(reservations.end, new Date(input.start))
-                        )
-                    )
-                )
-            );
-        if (conflictingReservations.length) {
+        const conflicts = await getConflictingReservations(
+            tx,
+            input.roomId,
+            input.start,
+            input.end
+        );
+        if (conflicts.length) {
             return;
         }
 
         await tx.insert(reservations).values({
             ...input,
-            start: new Date(input.start),
-            end: new Date(input.end),
             owner: ctx.user,
         });
     }
@@ -58,8 +72,8 @@ const updateReservation = s.mutation.updateReservation.mutate(
             .update(reservations)
             .set({
                 ...input,
-                start: input.start ? new Date(input.start) : undefined,
-                end: input.end ? new Date(input.end) : undefined,
+                start: input.start,
+                end: input.end,
             })
             .where(eq(reservations.id, input.id));
     }

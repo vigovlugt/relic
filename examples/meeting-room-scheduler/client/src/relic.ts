@@ -63,6 +63,7 @@ export const relic = await createRelicClient({
 
         return await res.json();
     },
+    // TODO: Remove url necessity
     poker: ssePoker({
         url: url + "/poke",
     }),
