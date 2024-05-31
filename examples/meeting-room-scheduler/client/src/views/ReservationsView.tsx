@@ -30,12 +30,17 @@ export function Reservations({
                     {roomList.map((room) => (
                         <li
                             key={room.id}
-                            onClick={() =>
-                                startTransition(() => setSelectedRoom(room.id))
-                            }
-                            className="font-semibold text-slate-800 cursor-pointer"
+                            className="font-semibold text-slate-800"
                         >
-                            {room.name}
+                            <button
+                                onMouseDown={() =>
+                                    startTransition(() =>
+                                        setSelectedRoom(room.id)
+                                    )
+                                }
+                            >
+                                {room.name}
+                            </button>
                         </li>
                     ))}
                 </ul>
