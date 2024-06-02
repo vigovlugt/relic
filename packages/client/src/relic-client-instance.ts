@@ -42,10 +42,11 @@ export class RelicClientInstance<TClient extends RelicClient> {
     private rollbackManager: RollbackManager;
     private metadata: MetadataManager;
 
-    private url: string;
+    private url: URL;
     private pusher: RelicPusher;
     private puller: RelicPuller;
     private pokeAdapter: RelicPokeAdapter | undefined;
+    private closePokeAdapter?: () => void;
 
     public mutate: {
         [K in keyof TClient["_"]["mutations"]]: TClient["_"]["mutations"][K]["_"]["input"] extends ZodTypeAny
@@ -77,7 +78,7 @@ export class RelicClientInstance<TClient extends RelicClient> {
         this.rollbackManager = rollbackManager;
         this.metadata = metadata;
         this.queryClient = queryClient;
-        this.url = url;
+        this.url = new URL(url);
         this.pokeAdapter = pokeAdapter;
 
         this.onOnline = this.onOnline.bind(this);
@@ -85,8 +86,9 @@ export class RelicClientInstance<TClient extends RelicClient> {
         this.pusher =
             pusher ??
             (async (push) => {
-                const url =
-                    this.url + (this.url.endsWith("/") ? "" : "/") + "push";
+                const url = new URL(this.url);
+                url.pathname += url.pathname.endsWith("/") ? "" : "/" + "push";
+
                 const res = await fetch(url, {
                     method: "POST",
                     headers: {
@@ -103,8 +105,9 @@ export class RelicClientInstance<TClient extends RelicClient> {
         this.puller =
             puller ??
             (async (pull) => {
-                const url =
-                    this.url + (this.url.endsWith("/") ? "" : "/") + "pull";
+                const url = new URL(this.url);
+                url.pathname += url.pathname.endsWith("/") ? "" : "/" + "pull";
+
                 const res = await fetch(url, {
                     method: "POST",
                     headers: {
@@ -334,23 +337,12 @@ export class RelicClientInstance<TClient extends RelicClient> {
 
     setup() {
         window.addEventListener("online", this.onOnline);
-        this.pokeAdapter?.onPoke(() => {
-            this.pull();
-        });
+        this.closePokeAdapter = this.pokeAdapter?.(() => this.pull());
     }
 
     destroy() {
         window.removeEventListener("online", this.onOnline);
-        this.pokeAdapter?.close();
-    }
-
-    // TODO: remove
-    public async debug() {
-        console.log({
-            mutations: await this.mutationQueue.getAll(),
-            rollback: await this.rollbackManager.getAll(),
-            metadata: await this.metadata.getAll(),
-        });
+        this.closePokeAdapter?.();
     }
 }
 

@@ -5,14 +5,12 @@ export type SsePokeAdapterOptions = {
 };
 
 export function ssePoker({ url }: SsePokeAdapterOptions): PokeAdapter {
-    const eventSource = new EventSource(url);
+    return (handler) => {
+        const eventSource = new EventSource(url);
+        eventSource.onmessage = handler;
 
-    return {
-        onPoke(handler) {
-            eventSource.onmessage = handler;
-        },
-        close() {
+        return () => {
             eventSource.close();
-        },
+        };
     };
 }

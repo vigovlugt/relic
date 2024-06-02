@@ -46,7 +46,7 @@ export function ReservationsTable({
                         </td>
                         <td className="whitespace-nowrap px-3 pr-0 py-3 text-sm">
                             <button
-                                className="rounded bg-slate-900 px-2 py-1 text-white"
+                                className="rounded bg-slate-900 px-3 py-1 text-white"
                                 onClick={() => {
                                     relic.mutate.deleteReservation(
                                         reservation.id

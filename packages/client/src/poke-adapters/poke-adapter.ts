@@ -1,4 +1,1 @@
-export type PokeAdapter = {
-    onPoke: (handler: () => void) => void;
-    close: () => void;
-};
+export type PokeAdapter = (handler: () => void) => () => void;

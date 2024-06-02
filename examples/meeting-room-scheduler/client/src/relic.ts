@@ -5,9 +5,9 @@ import { QueryClient } from "@tanstack/react-query";
 import { drizzleSchema, migrations } from "@mrs/shared";
 import { relicClient } from "./relic-client.ts";
 
-let user = localStorage.getItem("user");
+let user = localStorage.getItem("user") ?? "";
 if (!user) {
-    user = prompt("Enter your name") ?? "";
+    user = prompt("Enter your name") ?? "John Doe";
     localStorage.setItem("user", user);
 }
 
@@ -20,7 +20,9 @@ export const db = drizzle(sqlite, {
     schema: drizzleSchema,
 });
 
-const url = import.meta.env.VITE_SERVER_URL ?? "http://localhost:3000/relic";
+const url =
+    import.meta.env.VITE_SERVER_URL ??
+    "http://localhost:3000/relic?user=" + user;
 
 export const relic = await createRelicClient({
     relicClient,
@@ -31,40 +33,7 @@ export const relic = await createRelicClient({
     context: {
         user,
     },
-    pusher: async (push) => {
-        const res = await fetch(
-            url + "/push?user=" + encodeURIComponent(user),
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(push),
-            }
-        );
-        if (!res.ok) {
-            throw new Error("Failed to push mutations: " + res.statusText);
-        }
-    },
-    puller: async (pull) => {
-        const res = await fetch(
-            url + "/pull?user=" + encodeURIComponent(user),
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(pull),
-            }
-        );
-        if (!res.ok) {
-            throw new Error("Failed to pull mutations: " + res.statusText);
-        }
-
-        return await res.json();
-    },
-    // TODO: Remove url necessity
     poker: ssePoker({
-        url: url + "/poke",
+        url: url.split("?")[0] + "/poke",
     }),
 });
