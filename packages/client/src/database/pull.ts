@@ -75,7 +75,7 @@ export async function applyPullData(
         // Insert or replace new and updated rows
         // TODO: batch to avoid worker <-> main thread overhead
         await Promise.all(
-            rows.put.map(async (row) => {
+            rows.set.map(async (row) => {
                 const sql = `INSERT OR REPLACE INTO ${name} (${columns
                     .map((c) => c.name)
                     .join(", ")}) VALUES (${columns

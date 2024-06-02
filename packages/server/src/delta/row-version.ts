@@ -13,7 +13,7 @@ export type RowVersionClientView<TSchema extends RelicSchema> = {
 
 export type RowVersionClientViewDiff<TSchema extends RelicSchema> = {
     [K in keyof TSchema]: {
-        put: string[];
+        set: string[];
         delete: string[];
     };
 };
@@ -109,7 +109,7 @@ export function rowVersion<
         }
 
         const putEntities = Object.fromEntries(
-            Object.entries(diff).map(([table, v]) => [table, v.put])
+            Object.entries(diff).map(([table, v]) => [table, v.set])
         ) as { [K in keyof TSchema]: string[] };
 
         // Fetch changedEntities
@@ -130,7 +130,7 @@ export function rowVersion<
             Object.entries(entities).map(([table, v]) => [
                 table,
                 {
-                    put: v,
+                    set: v,
                     delete: diff[table]!.delete,
                 },
             ])
@@ -177,6 +177,6 @@ export function clientDiffEmpty<TSchema extends RelicSchema>(
     diff: RowVersionClientViewDiff<TSchema>
 ) {
     return Object.values(diff).every(
-        (v) => v.put.length === 0 && v.delete.length === 0
+        (v) => v.set.length === 0 && v.delete.length === 0
     );
 }

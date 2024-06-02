@@ -3,7 +3,7 @@ import { RelicContext, RelicSchema } from "@relic/core";
 
 export type RelicPullHandlerOptions<
     TContext extends RelicContext,
-    TTx = unknown
+    TTx = unknown,
 > = {
     ctx: TContext;
     tx: TTx;
@@ -14,7 +14,7 @@ export type RelicPullHandlerOptions<
 export type RelicPullHandler<
     TSchema extends RelicSchema = RelicSchema,
     TContext extends RelicContext = RelicContext,
-    TTx = unknown
+    TTx = unknown,
 > = (
     opts: RelicPullHandlerOptions<TContext, TTx>
 ) => Promise<RelicPullHandlerResult<TSchema>> | RelicPullHandlerResult<TSchema>;
@@ -23,7 +23,7 @@ export type RelicPullHandlerResult<TSchema extends RelicSchema> = {
     clear: boolean;
     entities: {
         [K in keyof TSchema]: {
-            put: InferSelectModel<TSchema[K]>[];
+            set: InferSelectModel<TSchema[K]>[];
             delete: (unknown | Record<string, unknown>)[];
         };
     };
@@ -33,7 +33,7 @@ export type RelicPullHandlerResult<TSchema extends RelicSchema> = {
 export class RelicPullBuilder<
     TSchema extends RelicSchema = RelicSchema,
     TContext extends RelicContext = RelicContext,
-    TTx = unknown
+    TTx = unknown,
 > {
     public _: {
         context: TContext;
@@ -55,7 +55,7 @@ export class RelicPullBuilder<
 export class RelicPull<
     TSchema extends RelicSchema = RelicSchema,
     TContext extends RelicContext = RelicContext,
-    TTx = unknown
+    TTx = unknown,
 > {
     public _: {
         context: TContext;
