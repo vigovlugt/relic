@@ -10,9 +10,9 @@ import { RelicPoke, RelicPokeBuilder } from "./poke";
 
 export class RelicServerBuilder<
     TDef extends RelicDefinition = RelicDefinition,
-    TContext extends RelicContext = RelicContext,
+    TContext extends RelicContext = {},
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    TTx = any
+    TTx = any,
 > {
     public _: {
         definition: TDef;
@@ -100,7 +100,7 @@ export class RelicServerBuilder<
                 TDef["_"]["mutations"][K]["_"]["input"],
                 TTx
             >;
-        }
+        },
     >(mutations: TMutations) {
         // TODO: Make type safe
         if (!this._.puller) {

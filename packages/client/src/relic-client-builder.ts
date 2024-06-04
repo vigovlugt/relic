@@ -17,7 +17,7 @@ export type ClientTx = SQLiteTransaction<
 >;
 export class RelicClientBuilder<
     TDef extends RelicDefinition = RelicDefinition,
-    TContext extends RelicContext = Record<string, never>,
+    TContext extends RelicContext = {},
 > {
     public _: {
         definition: TDef;

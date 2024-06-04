@@ -158,7 +158,7 @@ export function calculateClientViewDiff<TSchema extends RelicSchema>(
             const newEntityIds = Object.keys(newEntities);
             const newEntityIdSet = new Set(newEntityIds);
 
-            const put = newEntityIds.filter((id) => {
+            const set = newEntityIds.filter((id) => {
                 const oldVersion = oldEntities[id];
                 const newVersion = newEntities[id];
                 return oldVersion !== newVersion;
@@ -168,7 +168,7 @@ export function calculateClientViewDiff<TSchema extends RelicSchema>(
                 (id) => !newEntityIdSet.has(id)
             );
 
-            return [table, { put, delete: deleteIds }];
+            return [table, { set, delete: deleteIds }];
         })
     ) as RowVersionClientViewDiff<TSchema>;
 }

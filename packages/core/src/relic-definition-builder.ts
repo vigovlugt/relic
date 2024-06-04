@@ -10,7 +10,7 @@ export type RelicContext = Record<string, any>;
 
 export class RelicDefinitionBuilder<
     TSchema extends RelicSchema = RelicSchema,
-    TContext extends RelicContext = RelicContext
+    TContext extends RelicContext = {},
 > {
     public _: {
         schema: TSchema;
@@ -40,7 +40,7 @@ export class RelicDefinitionBuilder<
         TMutations extends Record<
             string,
             RelicMutationBuilder<TContext> | RelicMutation<TContext>
-        >
+        >,
     >(mutations: TMutations) {
         return new RelicDefinition<TContext, TSchema, TMutations>(
             this._.schema,
