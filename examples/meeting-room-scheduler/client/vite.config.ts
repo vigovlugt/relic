@@ -10,4 +10,7 @@ export default defineConfig({
     build: {
         target: "esnext", // Required for top level await
     },
+    resolve: {
+        conditions: ["typescript"],
+    },
 });

@@ -4,25 +4,24 @@
     "description": "SQLite-wasm opfs sah-pool interface",
     "author": "Vigo Vlugt",
     "license": "MIT",
-    "main": "dist/index.js",
-    "module": "dist/index.mjs",
-    "typings": "dist/index.d.ts",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/vigovlugt/relic.git",
-        "directory": "packages/sqlite-wasm"
-    },
     "exports": {
         ".": {
+            "typescript": "./src/index.ts",
             "import": "./dist/index.mjs",
             "require": "./dist/index.js",
             "default": "./dist/index.js"
         },
         "./worker": {
+            "typescript": "./src/worker.ts",
             "import": "./dist/worker.mjs",
             "require": "./dist/worker.js",
             "default": "./dist/worker.js"
         }
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/vigovlugt/relic.git",
+        "directory": "packages/sqlite-wasm"
     },
     "scripts": {
         "build": "tsup",

@@ -2,7 +2,11 @@
   "name": "@mrs/shared",
   "version": "1.0.0",
   "description": "",
-  "main": "src/index.ts",
+  "exports": {
+    ".": {
+      "typescript": "./src/index.ts"
+    }
+  },
   "dependencies": {
     "@relic/core": "*",
     "drizzle-orm": "^0.30.10",

@@ -1,7 +1,7 @@
 {
   "name": "@mrs/server",
   "scripts": {
-    "dev": "tsx watch src/index.ts"
+    "dev": "tsx watch --conditions=typescript src/index.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.11.1",

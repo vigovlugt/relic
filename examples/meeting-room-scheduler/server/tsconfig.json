@@ -9,8 +9,6 @@
         "jsx": "react-jsx",
         "jsxImportSource": "hono/jsx",
         "baseUrl": ".",
-        "paths": {
-            "@mrs/shared": ["@mrs/shared/src"]
-        }
+        "customConditions": ["typescript"]
     }
 }

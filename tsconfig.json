@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "module": "esnext",
+        "module": "NodeNext",
         "lib": ["esnext", "dom", "dom.iterable"],
         "target": "es2020",
         "declaration": true,
@@ -12,20 +12,14 @@
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
         "noUncheckedIndexedAccess": true,
-        "moduleResolution": "node",
+        "moduleResolution": "NodeNext",
         "jsx": "react",
         "esModuleInterop": true,
         "skipLibCheck": true,
         "noPropertyAccessFromIndexSignature": true,
         "noImplicitOverride": true,
         "baseUrl": ".",
-        "paths": {
-            "@relic/core": ["packages/core/src"],
-            "@relic/client": ["packages/client/src"],
-            "@relic/server": ["packages/server/src"],
-            "@relic/sqlite-wasm": ["packages/sqlite-wasm/src"],
-            "@relic/adapter-drizzle": ["packages/adapter-drizzle/src"]
-        }
+        "customConditions": ["typescript"]
     },
     "include": ["packages", "examples"]
 }

@@ -4,9 +4,14 @@
     "description": "Relic Drizzle Adapter",
     "author": "Vigo Vlugt",
     "license": "MIT",
-    "main": "dist/index.js",
-    "module": "dist/index.mjs",
-    "typings": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "typescript": "./src/index.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.js",
+            "types": "./dist/index.d.ts"
+        }
+    },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/vigovlugt/relic.git",
