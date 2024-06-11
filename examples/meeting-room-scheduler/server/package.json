@@ -1,5 +1,14 @@
 {
   "name": "@mrs/server",
+  "private": true,
+  "exports": {
+    "./db": {
+      "typescript": "./src/db.ts"
+    },
+    "./relic": {
+      "typescript": "./src/relic.ts"
+    }
+  },
   "scripts": {
     "dev": "tsx watch --conditions=typescript src/index.ts"
   },

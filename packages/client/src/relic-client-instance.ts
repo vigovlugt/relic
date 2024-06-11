@@ -47,6 +47,7 @@ export class RelicClientInstance<TClient extends RelicClient> {
     private puller: RelicPuller;
     private pokeAdapter: RelicPokeAdapter | undefined;
     private closePokeAdapter?: () => void;
+    public currentPull?: Promise<void>;
 
     public mutate: {
         [K in keyof TClient["_"]["mutations"]]: TClient["_"]["mutations"][K]["_"]["input"] extends ZodTypeAny
@@ -248,86 +249,102 @@ export class RelicClientInstance<TClient extends RelicClient> {
     }
 
     public async pull() {
+        while (this.currentPull) {
+            await this.currentPull;
+        }
+        const { promise, resolve, reject } = Promise.withResolvers<void>();
+        this.currentPull = promise;
         if (!navigator.onLine) {
             return;
         }
         // TODO: should lock pull, so two pulls do not mess up state
 
-        const version = await this.dbMutex.withLock(() =>
-            this.metadata.get("version")
-        );
-        const pullData = await this.puller({
-            clientId: this.id,
-            version: version ?? null,
-        });
+        try {
+            const version = await this.dbMutex.withLock(() =>
+                this.metadata.get("version")
+            );
+            const pullData = await this.puller({
+                clientId: this.id,
+                version: version ?? null,
+            });
 
-        // Get server data
-        await this.dbMutex.withLock(async () => {
-            await this.db.transaction(async (tx) => {
-                // Make sure version is still the same, otherwise delta for previous version should not be applied
-                const currentVersion = await this.metadata.get("version");
+            // Get server data
+            await this.dbMutex.withLock(async () => {
+                await this.db.transaction(async (tx) => {
+                    // Make sure version is still the same, otherwise delta for previous version should not be applied
+                    const currentVersion = await this.metadata.get("version");
 
-                if (currentVersion !== version) {
-                    throw new Error(
-                        `Could not apply pull: version mismatch, expected ${version} but got ${currentVersion}`
-                    );
-                }
-
-                // Rollback data
-                await this.rollbackManager.rollback();
-
-                // Apply server data, still within the same transaction
-                await applyPullData(
-                    this.sqlite,
-                    this.relicClient._.schema,
-                    pullData
-                );
-                // The authorative server data should be the new beginning of the rollback log
-                await this.rollbackManager.clear();
-
-                // Set new version to be used for next pull
-                await this.metadata.set(
-                    "version",
-                    String(pullData.data.version)
-                );
-
-                // delete processed mutations
-                this.mutationQueue.deleteUpTo(pullData.lastProcessedMutationId);
-
-                // reapply pending mutations
-                const pendingMutations = await this.mutationQueue.getAll();
-                for (const { name, input } of pendingMutations) {
-                    const mut = this.relicClient._.mutations[name];
-                    if (!mut) {
-                        throw new Error(`Mutation ${name} not found`);
-                    }
-
-                    try {
-                        // Try mutations in nested transactions, so every mutation is atomic
-                        // Failed mutations will not fail the entire pull
-                        await tx.transaction(async (tx) => {
-                            await mut._.handler({
-                                input,
-                                ctx: this.context,
-                                tx,
-                            });
-                        });
-                    } catch (e) {
-                        console.error(
-                            "Error when applying mutation, it has not been re-applied:",
-                            name,
-                            "with input:",
-                            input,
-                            "error:",
-                            e
+                    if (currentVersion !== version) {
+                        throw new Error(
+                            `Could not apply pull: version mismatch, expected ${version} but got ${currentVersion}`
                         );
                     }
-                }
-            });
-        });
 
-        this.invalidatePendingMutations();
-        this.invalidateQueries();
+                    // Rollback data
+                    await this.rollbackManager.rollback();
+
+                    // Apply server data, still within the same transaction
+                    await applyPullData(
+                        this.sqlite,
+                        this.relicClient._.schema,
+                        pullData
+                    );
+                    // The authorative server data should be the new beginning of the rollback log
+                    await this.rollbackManager.clear();
+
+                    // Set new version to be used for next pull
+                    await this.metadata.set(
+                        "version",
+                        String(pullData.data.version)
+                    );
+
+                    // delete processed mutations
+                    this.mutationQueue.deleteUpTo(
+                        pullData.lastProcessedMutationId
+                    );
+
+                    // reapply pending mutations
+                    const pendingMutations = await this.mutationQueue.getAll();
+                    for (const { name, input } of pendingMutations) {
+                        const mut = this.relicClient._.mutations[name];
+                        if (!mut) {
+                            throw new Error(`Mutation ${name} not found`);
+                        }
+
+                        try {
+                            // Try mutations in nested transactions, so every mutation is atomic
+                            // Failed mutations will not fail the entire pull
+                            await tx.transaction(async (tx) => {
+                                await mut._.handler({
+                                    input,
+                                    ctx: this.context,
+                                    tx,
+                                });
+                            });
+                        } catch (e) {
+                            console.error(
+                                "Error when applying mutation, it has not been re-applied:",
+                                name,
+                                "with input:",
+                                input,
+                                "error:",
+                                e
+                            );
+                        }
+                    }
+                });
+            });
+
+            await Promise.all([
+                this.invalidatePendingMutations(),
+                this.invalidateQueries(),
+            ]);
+        } catch (e) {
+            reject(e);
+        } finally {
+            resolve();
+            this.currentPull = undefined;
+        }
     }
 
     private onOnline() {
@@ -368,12 +385,14 @@ export async function createRelicClient<TClient extends RelicClient>({
     const metadata = new MetadataManager(sqlite, "_relic_metadata");
 
     // Initialize metadata table
-    await metadata.setup();
+    await Promise.all([
+        metadata.setup(),
+        // Initialize mutation queue table
+        mutationQueue.setup(),
+        // Setup rollback manager table and triggers
+        rollbackManager.setup(),
+    ]);
     const clientId = await metadata.get("clientId");
-    // Initialize mutation queue table
-    await mutationQueue.setup();
-    // Setup rollback manager table and triggers
-    await rollbackManager.setup();
 
     const newClient = new RelicClientInstance(
         clientId,
@@ -392,14 +411,9 @@ export async function createRelicClient<TClient extends RelicClient>({
 
     // Do a pull and push when the client is created, so the client is up-to-date
     // Not important to await this, as the client will be up-to-date eventually
+    newClient.setup();
     newClient.pull();
     newClient.push();
-    newClient.setup();
-
-    // TODO: remove
-    // setInterval(() => {
-    //     newClient.pull();
-    // }, 1000);
 
     return newClient;
 }

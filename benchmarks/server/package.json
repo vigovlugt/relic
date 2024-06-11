@@ -1,0 +1,42 @@
+{
+  "name": "@drizzle/benchmarks",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "scripts": {
+    "start:relic": "pnpm down:rest && pnpm up:relic && sleep 3 && pnpm server:relic",
+    "start:rest": "pnpm down:relic && pnpm up:rest && sleep 3 && pnpm server:rest",
+    "server:relic": "NODE_ENV=production tsx --conditions=typescript src/relic/index.ts",
+    "server:rest": "NODE_ENV=production tsx --conditions=typescript src/rest/index.ts",
+    "bench:relic": "K6_WEB_DASHBOARD=true k6 run scripts/relic.js",
+    "bench:rest": "K6_WEB_DASHBOARD=true k6 run scripts/rest.js",
+    "up:relic": "docker compose -f docker-compose.relic.yml up -d",
+    "up:rest": "docker compose -f docker-compose.rest.yml up -d",
+    "down:relic": "docker compose -f docker-compose.relic.yml down",
+    "down:rest": "docker compose -f docker-compose.rest.yml down"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@hono/node-server": "^1.11.1",
+    "@hono/zod-validator": "^0.2.2",
+    "@mrs/server": "workspace:^",
+    "@relic/adapter-drizzle": "workspace:^",
+    "@relic/server": "workspace:^",
+    "@types/pg": "^8.11.6",
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.30.10",
+    "hono": "^4.4.4",
+    "pg": "^8.11.5",
+    "tsup": "^8.0.2",
+    "zod": "^3.23.5"
+  },
+  "devDependencies": {
+    "@swc/cli": "^0.3.12",
+    "@swc/core": "^1.5.25",
+    "@types/k6": "^0.51.0",
+    "@types/node": "^20.11.17",
+    "tsx": "^4.13.1"
+  }
+}

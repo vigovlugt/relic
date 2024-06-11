@@ -70,14 +70,27 @@ const updateReservation = s.mutation.updateReservation.mutate(
     async ({ tx, input }) => {
         await tx
             .update(reservations)
-            .set({
-                ...input,
-                start: input.start,
-                end: input.end,
-            })
+            .set(input)
             .where(eq(reservations.id, input.id));
     }
 );
+
+function batch<T>(array: T[], size: number = 999) {
+    const batches = [];
+    for (let i = 0; i < array.length; i += size) {
+        batches.push(array.slice(i, i + size));
+    }
+    return batches;
+}
+
+async function mapBatched<T, U>(
+    array: T[],
+    callback: (batch: T[]) => Promise<U[]>,
+    size?: number
+) {
+    const results = await Promise.all(batch(array, size).map(callback));
+    return results.flat();
+}
 
 const puller = s.puller.pull(
     rowVersion(
@@ -101,20 +114,24 @@ const puller = s.puller.pull(
         },
         async ({ tx, entities }) => {
             return {
-                reservations: entities.reservations.length
-                    ? await tx
-                          .select()
-                          .from(reservations)
-                          .where(
-                              inArray(reservations.id, entities.reservations)
-                          )
-                    : [],
-                rooms: entities.rooms.length
-                    ? await tx
-                          .select()
-                          .from(rooms)
-                          .where(inArray(rooms.id, entities.rooms))
-                    : [],
+                reservations: await mapBatched(
+                    entities.reservations,
+                    async (batch) =>
+                        await tx
+                            .select()
+                            .from(reservations)
+                            .where(inArray(reservations.id, batch)),
+                    10000
+                ),
+                rooms: await mapBatched(
+                    entities.rooms,
+                    async (batch) =>
+                        await tx
+                            .select()
+                            .from(rooms)
+                            .where(inArray(rooms.id, batch)),
+                    10000
+                ),
             };
         }
     )

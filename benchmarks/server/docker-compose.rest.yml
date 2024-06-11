@@ -1,0 +1,15 @@
+version: '3.9'
+
+services:
+  db-rest:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    networks:
+      - rest
+
+networks:
+  rest:

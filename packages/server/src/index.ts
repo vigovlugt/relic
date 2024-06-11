@@ -1,4 +1,4 @@
-export * from "./delta";
+export * from "./delta/index";
 export * from "./poke";
 export * from "./pull";
 export * from "./request-handler";

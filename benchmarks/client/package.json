@@ -1,0 +1,25 @@
+{
+  "name": "@relic/benchmarks-client",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "type-check": "tsc --noEmit",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2",
+    "vite": "^5.2.0"
+  },
+  "dependencies": {
+    "@mrs/client": "workspace:^",
+    "@mrs/shared": "workspace:*",
+    "@relic/client": "workspace:^",
+    "@relic/sqlite-wasm": "workspace:^",
+    "@tanstack/query-core": "^5.35.1",
+    "drizzle-orm": "^0.30.10",
+    "tinybench": "^2.8.0"
+  }
+}

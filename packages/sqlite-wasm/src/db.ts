@@ -3,6 +3,9 @@ import {
     MessageResponse,
     CommandToCommandResponse,
     CommandResponse,
+    SqlExecCommand,
+    CloseCommand,
+    RemoveCommand,
 } from "./shared";
 import { SqliteDb } from "../../client/src/database";
 import { BindingSpec } from "@sqlite.org/sqlite-wasm";
@@ -57,7 +60,7 @@ export class SQLiteWasmDb implements SqliteDb {
 
         return new Promise((resolve) => {
             const listener = (response: CommandResponse) => {
-                resolve(response);
+                resolve(response as CommandToCommandResponse<T>);
                 this.commandCallbacks.delete(messageId);
             };
 
@@ -66,12 +69,12 @@ export class SQLiteWasmDb implements SqliteDb {
             this.postMessage({
                 ...message,
                 messageId,
-            });
+            } as Command);
         });
     }
 
     async exec(sql: string, bind?: BindingSpec) {
-        const response = await this.sendCommand({
+        const response = await this.sendCommand<SqlExecCommand>({
             type: "exec",
             bind,
             sql,
@@ -84,5 +87,27 @@ export class SQLiteWasmDb implements SqliteDb {
         return {
             rows: response.rows,
         };
+    }
+
+    async close() {
+        const res = await this.sendCommand<CloseCommand>({
+            type: "close",
+        });
+        if ("error" in res) {
+            throw res.error;
+        }
+    }
+
+    async remove() {
+        const res = await this.sendCommand<RemoveCommand>({
+            type: "remove",
+        });
+        if ("error" in res) {
+            throw res.error;
+        }
+    }
+
+    async terminate() {
+        this.worker.terminate();
     }
 }

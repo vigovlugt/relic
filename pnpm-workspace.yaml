@@ -2,3 +2,4 @@ packages:
     - "packages/*"
     - "examples/*"
     - "examples/meeting-room-scheduler/*"
+    - "benchmarks/*"
