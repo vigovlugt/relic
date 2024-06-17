@@ -1,7 +1,7 @@
 import { reservations, rooms } from "@mrs/shared";
 import { setupRelic } from "./relic";
 import { Bench } from "tinybench";
-import { eq } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 
 declare global {
     interface Window {
@@ -11,7 +11,7 @@ declare global {
 }
 
 async function benchmark(rows: number) {
-    const startupBench = new Bench({ time: 1000 });
+    const startupBench = new Bench({ time: 1000, iterations: 1 });
 
     startupBench.add(
         "setup relic new",
@@ -150,6 +150,7 @@ async function benchmark(rows: number) {
     console.log("Rows: " + rows);
     console.table();
     console.table([...startupBench.table(), ...bench.table()]);
+    document.body.innerHTML += `<h1>Rows: ${rows}</h1>`;
 
     return Object.fromEntries([
         ...startupBench.tasks.map((task, i) => [
@@ -164,7 +165,8 @@ async function main() {
     const opfsRoot = await navigator.storage.getDirectory();
     (opfsRoot as any).remove();
 
-    const rows = [1, 10, 100, 1000, 10000, 100000];
+    let rows = [1, 10, 100, 1000, 10000, 100000];
+    // rows = [1_000_000];
     const results = [];
     for (const row of rows) {
         const result = await benchmark(row);

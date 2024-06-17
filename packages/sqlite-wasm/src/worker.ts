@@ -8,6 +8,7 @@ import {
     CommandToCommandResponse,
     MessageResponse,
     RemoveCommand,
+    SqlBatchExecCommand,
     SqlExecCommand,
 } from "./shared";
 
@@ -45,14 +46,19 @@ class WorkerDb {
         switch (message.type) {
             case "exec":
                 this.exec(message);
-                break;
+                return;
             case "close":
                 this.close(message);
-                break;
+                return;
             case "remove":
                 this.remove(message);
-                break;
+                return;
+            case "execBatch":
+                this.execBatch(message);
+                return;
         }
+
+        message satisfies never;
     }
 
     postMessage(message: MessageResponse) {
@@ -84,6 +90,37 @@ class WorkerDb {
 
             this.respondTo(message, {
                 rows: result,
+            });
+        } catch (e) {
+            if (e instanceof Error) {
+                return this.respondTo(message, {
+                    error: e,
+                });
+            }
+
+            return this.respondTo(message, {
+                error: new Error("Unknown sql exec error: " + e),
+            });
+        }
+    }
+
+    async execBatch(message: SqlBatchExecCommand) {
+        if (this.isClosed) {
+            return this.respondTo(message, {
+                error: new Error("Database is closed"),
+            });
+        }
+
+        try {
+            const results = message.execs.map(([sql, bind], i) => {
+                this.db.exec(sql, {
+                    returnValue: "resultRows",
+                    bind,
+                });
+            });
+
+            this.respondTo(message, {
+                rows: results,
             });
         } catch (e) {
             if (e instanceof Error) {

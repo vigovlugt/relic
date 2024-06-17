@@ -10,6 +10,11 @@ export type SqlExecCommand = BaseCommand & {
     bind?: BindingSpec;
 };
 
+export type SqlBatchExecCommand = BaseCommand & {
+    type: "execBatch";
+    execs: [string, BindingSpec | undefined][];
+};
+
 export type CloseCommand = BaseCommand & {
     type: "close";
 };
@@ -29,17 +34,30 @@ export type SqlExecCommandResponse = BaseCommand &
           }
     );
 
+export type SqlBatchExecCommandResponse = BaseCommand &
+    (
+        | {
+              rows: SqlValue[][][];
+          }
+        | { error: Error }
+    );
+
 export type InitializedMessage = {
     type: "initialized";
 };
 
-export type Command = SqlExecCommand | CloseCommand | RemoveCommand;
+export type Command =
+    | SqlExecCommand
+    | CloseCommand
+    | RemoveCommand
+    | SqlBatchExecCommand;
 export type CommandResponse = CommandToCommandResponse<Command>;
 
 export type CommandToCommandResponse<T extends Command> = {
     exec: SqlExecCommandResponse;
     close: BaseCommand;
     remove: BaseCommand;
+    execBatch: SqlBatchExecCommandResponse;
 }[T["type"]];
 
 export type MessageResponse = CommandResponse | InitializedMessage;

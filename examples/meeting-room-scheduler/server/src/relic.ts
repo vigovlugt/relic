@@ -97,24 +97,29 @@ const puller = s.puller.pull(
         s.puller,
         rowVersionPostgresAdapter(),
         async ({ tx }) => {
-            return {
-                reservations: await tx
+            const [reservationViews, roomViews] = await Promise.all([
+                await tx
                     .select({
                         id: reservations.id,
                         version: reservations.version,
                     })
                     .from(reservations),
-                rooms: await tx
+                await tx
                     .select({
                         id: rooms.id,
                         version: rooms.version,
                     })
                     .from(rooms),
+            ]);
+
+            return {
+                reservations: reservationViews,
+                rooms: roomViews,
             };
         },
         async ({ tx, entities }) => {
-            return {
-                reservations: await mapBatched(
+            const [reservationSets, roomSets] = await Promise.all([
+                mapBatched(
                     entities.reservations,
                     async (batch) =>
                         await tx
@@ -123,7 +128,7 @@ const puller = s.puller.pull(
                             .where(inArray(reservations.id, batch)),
                     10000
                 ),
-                rooms: await mapBatched(
+                mapBatched(
                     entities.rooms,
                     async (batch) =>
                         await tx
@@ -132,6 +137,11 @@ const puller = s.puller.pull(
                             .where(inArray(rooms.id, batch)),
                     10000
                 ),
+            ]);
+
+            return {
+                reservations: reservationSets,
+                rooms: roomSets,
             };
         }
     )

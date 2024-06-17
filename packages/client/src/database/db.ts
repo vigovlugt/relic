@@ -9,4 +9,7 @@ export type SqliteExecResult = {
 
 export interface SqliteDb {
     exec: (sql: string, params?: SqliteParams) => Promise<SqliteExecResult>;
+    execBatch: ([sql, params]: [string, SqliteParams | undefined][]) => Promise<
+        SqliteExecResult[]
+    >;
 }

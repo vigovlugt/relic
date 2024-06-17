@@ -86,18 +86,17 @@ export function rowVersion<
             fetchView(opts),
         ]);
 
-        const newClientView = Object.fromEntries(
-            Object.entries(newClientViewResult).map(([table, entities]) => [
-                table,
-                Object.fromEntries(entities.map((e) => [e.id, e.version])),
-            ])
-        ) as RowVersionClientView<TSchema>;
+        const newClientView = {} as RowVersionClientView<TSchema>;
+        for (const [table, entities] of Object.entries(newClientViewResult)) {
+            (newClientView as any)[table] = {};
+
+            for (const e of entities) {
+                (newClientView as any)[table][e.id] = e.version;
+            }
+        }
 
         // Get difference between old and new client view record
-        const diff = calculateClientViewDiff(
-            oldClientView ?? {},
-            newClientView
-        );
+        const diff = calculateClientViewDiff(oldClientView, newClientView);
 
         // Return early if no changes
         if (clientDiffEmpty(diff) && oldClientView !== undefined) {
@@ -124,7 +123,7 @@ export function rowVersion<
         await db.createClientView(opts.tx, newViewId, newClientView);
 
         // Delete old client views
-        await db.deleteClientViews(opts.tx);
+        // await db.deleteClientViews(opts.tx);
 
         const pullEntities = Object.fromEntries(
             Object.entries(entities).map(([table, v]) => [
@@ -147,23 +146,25 @@ export function rowVersion<
 }
 
 export function calculateClientViewDiff<TSchema extends RelicSchema>(
-    oldView: Partial<RowVersionClientView<TSchema>>,
+    oldView: Partial<RowVersionClientView<TSchema>> | undefined,
     newView: RowVersionClientView<TSchema>
 ): RowVersionClientViewDiff<TSchema> {
     return Object.fromEntries(
         Object.entries(newView).map(([table, newEntities]) => {
+            if (oldView === undefined) {
+                return [table, { set: Object.keys(newEntities), delete: [] }];
+            }
+
             const oldEntities = oldView[table] ?? {};
-            const oldEntityIds = Object.keys(oldEntities);
-
             const newEntityIds = Object.keys(newEntities);
-            const newEntityIdSet = new Set(newEntityIds);
-
             const set = newEntityIds.filter((id) => {
                 const oldVersion = oldEntities[id];
                 const newVersion = newEntities[id];
                 return oldVersion !== newVersion;
             });
 
+            const oldEntityIds = Object.keys(oldEntities);
+            const newEntityIdSet = new Set(newEntityIds);
             const deleteIds = oldEntityIds.filter(
                 (id) => !newEntityIdSet.has(id)
             );

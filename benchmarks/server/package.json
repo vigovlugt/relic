@@ -8,8 +8,9 @@
     "start:rest": "pnpm down:relic && pnpm up:rest && sleep 3 && pnpm server:rest",
     "server:relic": "NODE_ENV=production tsx --conditions=typescript src/relic/index.ts",
     "server:rest": "NODE_ENV=production tsx --conditions=typescript src/rest/index.ts",
-    "bench:relic": "K6_WEB_DASHBOARD=true k6 run scripts/relic.js",
-    "bench:rest": "K6_WEB_DASHBOARD=true k6 run scripts/rest.js",
+    "bench:relic": "k6 run scripts/relic.js",
+    "bench:rest": "k6 run scripts/rest.js",
+    "bench:relic-all": "tsx scripts/relic-all.ts",
     "up:relic": "docker compose -f docker-compose.relic.yml up -d",
     "up:rest": "docker compose -f docker-compose.rest.yml up -d",
     "down:relic": "docker compose -f docker-compose.relic.yml down",
@@ -36,7 +37,7 @@
     "@swc/cli": "^0.3.12",
     "@swc/core": "^1.5.25",
     "@types/k6": "^0.51.0",
-    "@types/node": "^20.11.17",
+    "@types/node": "^20.12.12",
     "tsx": "^4.13.1"
   }
 }

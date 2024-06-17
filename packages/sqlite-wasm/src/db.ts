@@ -6,6 +6,7 @@ import {
     SqlExecCommand,
     CloseCommand,
     RemoveCommand,
+    SqlBatchExecCommand,
 } from "./shared";
 import { SqliteDb } from "../../client/src/database";
 import { BindingSpec } from "@sqlite.org/sqlite-wasm";
@@ -87,6 +88,21 @@ export class SQLiteWasmDb implements SqliteDb {
         return {
             rows: response.rows,
         };
+    }
+
+    async execBatch(execs: [string, BindingSpec | undefined][]) {
+        const response = await this.sendCommand<SqlBatchExecCommand>({
+            type: "execBatch",
+            execs: execs,
+        });
+
+        if ("error" in response) {
+            throw response.error;
+        }
+
+        return response.rows.map((r) => ({
+            rows: r,
+        }));
     }
 
     async close() {

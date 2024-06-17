@@ -12,6 +12,7 @@ import { handleRelicRequest } from "@relic/server";
 import { postgresAdapter } from "@relic/adapter-drizzle";
 import EventEmitter from "events";
 import { seed } from "../seed";
+import { eq } from "drizzle-orm";
 
 if (process.env.NODE_ENV !== "production") {
     throw new Error("NODE_ENV must be production");
@@ -50,8 +51,8 @@ app.post("/relic/*", (c) => {
         database: postgresAdapter(db),
     });
 });
-app.get("/relic/poke", (c) => {
-    return streamSSE(c, async (stream) => {
+app.get("/relic/poke", (c) =>
+    streamSSE(c, async (stream) => {
         pokeEmitter.on("poke", async () => {
             await stream.writeSSE({
                 data: "",
@@ -61,7 +62,45 @@ app.get("/relic/poke", (c) => {
         await new Promise((resolve) => {
             pokeEmitter.on("end", resolve);
         });
-    });
+    })
+);
+app.post("/rows", async (c) => {
+    const rows = c.req.query("rows");
+    if (!rows) {
+        return new Response("Missing rows", { status: 400 });
+    }
+
+    await seed(db, +rows);
+    console.log("Database seeded with " + rows + " rows");
+
+    return new Response();
+});
+app.post("/changes", async (c) => {
+    const changes = c.req.query("changes");
+    if (!changes) {
+        return new Response("Missing changes", { status: 400 });
+    }
+
+    for (let i = 0; i < +changes; i++) {
+        await db.insert(drizzleSchema.reservations).values({
+            id: crypto.randomUUID(),
+            roomId: "00000000-0000-0000-0000-000000000000",
+            owner: "Changes",
+            start: new Date(),
+            end: new Date(),
+        });
+    }
+    console.log("Database changes set to " + changes + " changes");
+
+    return new Response();
+});
+app.delete("/changes", async (c) => {
+    const res = await db
+        .delete(drizzleSchema.reservations)
+        .where(eq(drizzleSchema.reservations.owner, "Changes"))
+        .execute();
+    console.log("Database changes deleted n=", res.rowCount);
+    return new Response();
 });
 
 async function main() {

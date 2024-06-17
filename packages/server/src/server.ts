@@ -126,10 +126,6 @@ export class RelicServer<
                     );
                 }
 
-                console.log(
-                    `Processing mutation ${id} of client ${request.clientId}`
-                );
-
                 // Validate input against input schema
                 const parsedInput = mutation._.input?.safeParse(input) ?? {
                     success: true,

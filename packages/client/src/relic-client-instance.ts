@@ -268,6 +268,11 @@ export class RelicClientInstance<TClient extends RelicClient> {
                 version: version ?? null,
             });
 
+            const changes = Object.values(pullData.data.entities).reduce(
+                (n, e) => n + e.set.length + e.delete.length,
+                0
+            );
+
             // Get server data
             await this.dbMutex.withLock(async () => {
                 await this.db.transaction(async (tx) => {
@@ -283,14 +288,26 @@ export class RelicClientInstance<TClient extends RelicClient> {
                     // Rollback data
                     await this.rollbackManager.rollback();
 
-                    // Apply server data, still within the same transaction
-                    await applyPullData(
-                        this.sqlite,
-                        this.relicClient._.schema,
-                        pullData
-                    );
-                    // The authorative server data should be the new beginning of the rollback log
-                    await this.rollbackManager.clear();
+                    // If there are too many changes, deactivate triggers to avoid trigger overhead
+                    if (changes > 100) {
+                        await this.rollbackManager.deactivate();
+                        // Apply server data, still within the same transaction
+                        await applyPullData(
+                            this.sqlite,
+                            this.relicClient._.schema,
+                            pullData
+                        );
+                        await this.rollbackManager.activate();
+                    } else {
+                        // Apply server data, still within the same transaction
+                        await applyPullData(
+                            this.sqlite,
+                            this.relicClient._.schema,
+                            pullData
+                        );
+                        // The authorative server data should be the new beginning of the rollback log
+                        await this.rollbackManager.clear();
+                    }
 
                     // Set new version to be used for next pull
                     await this.metadata.set(
@@ -390,7 +407,7 @@ export async function createRelicClient<TClient extends RelicClient>({
         // Initialize mutation queue table
         mutationQueue.setup(),
         // Setup rollback manager table and triggers
-        rollbackManager.setup(),
+        rollbackManager.activate(),
     ]);
     const clientId = await metadata.get("clientId");
 

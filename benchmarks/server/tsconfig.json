@@ -9,5 +9,5 @@
         "baseUrl": ".",
         "customConditions": ["typescript"]
     },
-    "include": ["src/**/*.ts"]
+    "include": ["src/**/*.ts", "scripts/**/*.ts"]
 }

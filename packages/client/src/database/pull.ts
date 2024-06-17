@@ -1,4 +1,4 @@
-import { SqliteDb } from ".";
+import { SqliteDb, SqliteParams } from ".";
 import { SQLiteColumn, getTableConfig } from "drizzle-orm/sqlite-core";
 import { RelicPullResponse, RelicSchema } from "@relic/core";
 
@@ -9,11 +9,15 @@ export async function applyPullData(
 ) {
     const { clear, entities } = pullResponse.data;
     if (clear) {
-        for (const table of Object.values(schema)) {
-            const { name } = getTableConfig(table);
-            await db.exec(`DELETE FROM ${name}`);
-        }
+        db.execBatch(
+            Object.values(schema).map((table) => [
+                `DELETE FROM ${getTableConfig(table).name}`,
+                undefined,
+            ])
+        );
     }
+
+    const execs: [string, SqliteParams | undefined][] = [];
 
     for (const [tableName, rows] of Object.entries(entities)) {
         const tableSchema = schema[tableName];
@@ -42,17 +46,16 @@ export async function applyPullData(
                     );
                 }
 
-                await Promise.all(
-                    rowsToDelete.map(async (row) => {
-                        const sql = `DELETE FROM ${name} WHERE ${pk.columns
-                            .map((c) => `${c.name} = ?`)
-                            .join(" AND ")}`;
-                        const params = pk.columns.map((c) =>
+                execs.push([
+                    `DELETE FROM ${name} WHERE ${pk.columns
+                        .map((c) => `${c.name} = ?`)
+                        .join(" AND ")};`,
+                    rowsToDelete.map((row) =>
+                        pk.columns.map((c) =>
                             transformValue(c, row[jsonNameByDbName[c.name]])
-                        );
-                        await db.exec(sql, params);
-                    })
-                );
+                        )
+                    ),
+                ]);
             } else {
                 // Single primary keys are values
                 const rowsToDelete = rows.delete as unknown[];
@@ -62,32 +65,27 @@ export async function applyPullData(
                     throw new Error(`Table ${name} has no primary key`);
                 }
 
-                await Promise.all(
-                    rowsToDelete.map(async (row) => {
-                        const sql = `DELETE FROM ${name} WHERE ${pkColumn.name} = ?`;
-                        const params = [transformValue(pkColumn, row)];
-                        await db.exec(sql, params);
-                    })
-                );
+                execs.push([
+                    `DELETE FROM ${name} WHERE ${pkColumn.name} = ?;`,
+                    rowsToDelete.map((row) => transformValue(pkColumn, row)),
+                ]);
             }
         }
 
         // Insert or replace new and updated rows
-        // TODO: batch to avoid worker <-> main thread overhead
-        await Promise.all(
-            rows.set.map(async (row) => {
-                const sql = `INSERT OR REPLACE INTO ${name} (${columns
-                    .map((c) => c.name)
-                    .join(", ")}) VALUES (${columns
-                    .map(() => "?")
-                    .join(", ")})`;
-                const params = columns.map((c) =>
-                    transformValue(c, row[jsonNameByDbName[c.name]])
-                );
-                await db.exec(sql, params);
-            })
-        );
+        for (const row of rows.set) {
+            const sql = `INSERT OR REPLACE INTO ${name} (${columns
+                .map((c) => c.name)
+                .join(", ")}) VALUES (${columns.map(() => "?").join(", ")});`;
+            const params = columns.map((c) =>
+                transformValue(c, row[jsonNameByDbName[c.name]])
+            );
+            execs.push([sql, params]);
+        }
     }
+
+    // Do all execs in one worker message to avoid multiple round trips
+    await db.execBatch(execs);
 }
 
 function transformValue(column: SQLiteColumn, value: unknown) {
