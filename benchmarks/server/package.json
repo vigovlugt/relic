@@ -15,7 +15,9 @@
     "up:relic": "docker compose -f docker-compose.relic.yml up -d",
     "up:rest": "docker compose -f docker-compose.rest.yml up -d",
     "down:relic": "docker compose -f docker-compose.relic.yml down",
-    "down:rest": "docker compose -f docker-compose.rest.yml down"
+    "down:rest": "docker compose -f docker-compose.rest.yml down",
+    "zip:relic": "tar -czf relic.tar.gz results",
+    "zip:rest": "tar -czf rest.tar.gz results-rest"
   },
   "keywords": [],
   "author": "",

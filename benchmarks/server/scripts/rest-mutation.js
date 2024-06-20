@@ -28,7 +28,7 @@ export default function (data) {
     switch (MUTATION_TYPE) {
         case "createReservation": {
             const res = http.post(
-                URL + "/reservations",
+                URL + "/reservations?user=Changes",
                 JSON.stringify({
                     id: uuidv4(true),
                     start: new Date().toISOString(),
@@ -46,7 +46,7 @@ export default function (data) {
         }
         case "updateReservation": {
             const res = http.put(
-                URL + "/reservations/00000000-0000-0000-0000-000000000000",
+                URL + "/reservations/00000000-0000-0000-0000-000000000000?user=Changes",
                 JSON.stringify({
                     id: "00000000-0000-0000-0000-000000000000",
                     start: new Date().toISOString(),
@@ -62,7 +62,7 @@ export default function (data) {
         }
         case "deleteReservation": {
             const res = http.del(
-                URL + "/reservations/00000000-0000-0000-0000-000000000000",
+                URL + "/reservations/00000000-0000-0000-0000-000000000000?user=Changes",
                 JSON.stringify({
                     id: "00000000-0000-0000-0000-000000000000",
                 }),
