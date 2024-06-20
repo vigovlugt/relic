@@ -42,7 +42,6 @@ export default function () {
                     timeout: "600s",
                 }
             );
-            console.log(res, "\n");
             check(res, {
                 "status is 200": (r) => r.status === 200,
             });
