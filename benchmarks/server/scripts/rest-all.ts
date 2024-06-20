@@ -2,19 +2,15 @@ import { ExecException, execSync } from "node:child_process";
 import { mkdirSync, readFileSync, rm, rmSync, writeFileSync } from "node:fs";
 
 let rows = [1, 10, 100, 1000, 10000, 100000];
-rows = [100000];
 
 const commands = {
-    "initial-pull": "scripts/relic-pull-initial.js",
-    "pull 1 change": "-e N_CHANGES=1 scripts/relic-pull.js",
-    "pull 10 changes": "-e N_CHANGES=10 scripts/relic-pull.js",
-    "pull 100 changes": "-e N_CHANGES=100 scripts/relic-pull.js",
+    reservations: "scripts/rest-reservations.js",
     "create reservation":
-        "-e MUTATION_TYPE=createReservation scripts/relic-push.js",
+        "-e MUTATION_TYPE=createReservation scripts/rest-mutation.js",
     "delete reservation":
-        "-e MUTATION_TYPE=deleteReservation scripts/relic-push.js",
+        "-e MUTATION_TYPE=deleteReservation scripts/rest-mutation.js",
     "update reservation":
-        "-e MUTATION_TYPE=updateReservation scripts/relic-push.js",
+        "-e MUTATION_TYPE=updateReservation scripts/rest-mutation.js",
 };
 
 async function setRows(url: string, n: number) {
@@ -27,26 +23,11 @@ async function setRows(url: string, n: number) {
     }
 }
 
-async function waitForInflight(url: string) {
-    while (true) {
-        try {
-            const res = await fetch(url + "/wait-for-inflight");
-            if (res.ok) {
-                break;
-            }
-            console.error("Failed to wait for inflight requests", res);
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-        } catch (err) {
-            console.error(err);
-        }
-    }
-}
-
 async function main() {
     const argv = process.argv.slice(2);
     const url = argv[0];
     try {
-        rmSync("./results", { recursive: true });
+        rmSync("./results-rest", { recursive: true });
     } catch (err) {}
 
     for (const row of rows) {
@@ -68,14 +49,12 @@ async function main() {
             }
             console.log(row, name, stdout);
 
-            mkdirSync(`./results/${row}/`, { recursive: true });
+            mkdirSync(`./results-rest/${row}/`, { recursive: true });
 
             const output = readFileSync(`./summary.json`, { encoding: "utf8" });
             rmSync(`./summary.json`);
 
-            writeFileSync(`./results/${row}/${name}.json`, output);
-
-            await waitForInflight(url);
+            writeFileSync(`./results-rest/${row}/${name}.json`, output);
         }
     }
 }

@@ -4,7 +4,6 @@ import { schema, migrations, reservations } from "./db";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { streamSSE } from "hono/streaming";
 import { Pool } from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import EventEmitter from "events";
@@ -17,7 +16,6 @@ if (process.env.NODE_ENV !== "production") {
     throw new Error("NODE_ENV must be production");
 }
 
-const realtime = process.env.REALTIME === "true";
 if (!process.env.ROWS) {
     throw new Error("ROWS is not set");
 }
@@ -36,8 +34,6 @@ type ExtractTransaction<
     },
 > = Parameters<Parameters<TDB["transaction"]>[0]>[0];
 type Tx = ExtractTransaction<typeof db>;
-
-const realtimeEmitter = realtime ? new EventEmitter() : null;
 
 const app = new Hono();
 app.use("*", cors());
@@ -152,27 +148,26 @@ app.delete("/reservations/:id", zValidator("json", z.string()), async (c) => {
     const id = c.req.valid("json");
 
     await db.delete(reservations).where(eq(reservations.id, id));
-
-    if (realtime) {
-        realtimeEmitter!.emit("poke");
-    }
 });
+app.post("/rows", async (c) => {
+    const rows = c.req.query("rows");
+    if (!rows) {
+        return new Response("Missing rows", { status: 400 });
+    }
 
-if (realtime) {
-    app.get("/sse", (c) => {
-        return streamSSE(c, async (stream) => {
-            realtimeEmitter!.on("poke", async () => {
-                await stream.writeSSE({
-                    data: "",
-                });
-            });
+    await seed(db, +rows);
+    console.log("Database seeded with " + rows + " rows");
 
-            await new Promise((resolve) => {
-                realtimeEmitter!.on("end", resolve);
-            });
-        });
-    });
-}
+    return new Response();
+});
+app.delete("/changes", async (c) => {
+    const res = await db
+        .delete(reservations)
+        .where(eq(reservations.owner, "Changes"))
+        .execute();
+    console.log("Database changes deleted n=", res.rowCount);
+    return new Response();
+});
 
 async function main() {
     console.log({

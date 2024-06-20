@@ -8,10 +8,14 @@ if (N_CHANGES === undefined) {
     throw new Error("N_CHANGES must be set");
 }
 
+const URL = __ENV.URL
+if (!URL) {
+    throw new Error("URL is required");
+}
+
 export const options = {
     vus: 100,
     duration: "60s",
-    timeout: "120s",
     setupTimeout: "600s"
 };
 
@@ -22,7 +26,7 @@ export function setup() {
     for (let i = 0; i < exec.instance.vusInitialized; i++) {
         console.log("Setting up user", i);
         const clientId = uuidv4(true);
-        const res = http.post("http://localhost:3000/relic/pull?user=x", JSON.stringify({
+        const res = http.post(URL + "/relic/pull?user=x", JSON.stringify({
             clientId,
             version: null
         }));
@@ -30,7 +34,7 @@ export function setup() {
         data.push({ clientId, version: version })
     }
 
-    const res = http.post("http://localhost:3000/changes?changes=" + N_CHANGES)
+    const res = http.post(URL + "/changes?changes=" + N_CHANGES)
     check(res, {
         'status is 200': (r) => r.status === 200,
     });
@@ -40,15 +44,23 @@ export function setup() {
 
 export default function (data) {
     const myData = data[exec.vu.idInInstance - 1];
-    const res = http.post("http://localhost:3000/relic/pull?user=x", JSON.stringify(myData));
+    const res = http.post(URL + "/relic/pull?user=x", JSON.stringify(myData), {
+        timeout: "600s",
+    });
     check(res, {
         'status is 200': (r) => r.status === 200,
     });
 }
 
 export function teardown() {
-    const res = http.del("http://localhost:3000/changes");
+    const res = http.del(URL + "/changes");
     check(res, {
         'status is 200': (r) => r.status === 200,
     });
+}
+
+export function handleSummary(data) {
+    return {
+        'summary.json': JSON.stringify(data),
+    };
 }

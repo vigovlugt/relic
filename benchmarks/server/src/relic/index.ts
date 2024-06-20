@@ -33,15 +33,19 @@ export const db = drizzle(pool, {
 
 const pokeEmitter = new EventEmitter();
 
+let inflightRelicRequests = 0;
+
 const app = new Hono();
 app.use("*", cors());
-app.post("/relic/*", (c) => {
+app.post("/relic/*", async (c) => {
+    inflightRelicRequests++;
     const user = c.req.query("user");
     if (!user) {
+        inflightRelicRequests--;
         return new Response("Unauthorized", { status: 401 });
     }
 
-    return handleRelicRequest({
+    const res = await handleRelicRequest({
         relicServer,
         req: c.req.raw,
         context: {
@@ -50,6 +54,9 @@ app.post("/relic/*", (c) => {
         },
         database: postgresAdapter(db),
     });
+
+    inflightRelicRequests--;
+    return res;
 });
 app.get("/relic/poke", (c) =>
     streamSSE(c, async (stream) => {
@@ -100,6 +107,20 @@ app.delete("/changes", async (c) => {
         .where(eq(drizzleSchema.reservations.owner, "Changes"))
         .execute();
     console.log("Database changes deleted n=", res.rowCount);
+    return new Response();
+});
+
+app.get("/wait-for-inflight", async (c) => {
+    while (inflightRelicRequests > 0) {
+        console.log(
+            "Waiting for",
+            inflightRelicRequests,
+            "inflight requests to finish"
+        );
+        await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
+    console.log("All inflight requests finished");
     return new Response();
 });
 

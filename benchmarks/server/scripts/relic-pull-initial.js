@@ -3,7 +3,13 @@ import { check, sleep } from "k6";
 import { uuidv4 } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
 import exec from 'k6/execution';
 
+const URL = __ENV.URL;
+if (!URL) {
+    throw new Error("URL is required");
+}
+
 export const options = {
+    discardResponseBodies: true,
     scenarios: {
         default: {
             executor: 'constant-vus',
@@ -16,7 +22,7 @@ export const options = {
 
 export default function (data) {
     const clientId = uuidv4();
-    const res = http.post("http://localhost:3000/relic/pull?user=x", JSON.stringify({
+    const res = http.post(URL + "/relic/pull?user=x", JSON.stringify({
         clientId,
         version: null
     }), {
@@ -25,4 +31,10 @@ export default function (data) {
     check(res, {
         'status is 200': (r) => r.status === 200,
     });
+}
+
+export function handleSummary(data) {
+    return {
+        'summary.json': JSON.stringify(data),
+    };
 }

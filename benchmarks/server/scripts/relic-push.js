@@ -8,6 +8,11 @@ if (!["createReservation", "updateReservation", "deleteReservation"].includes(MU
     throw new Error("MUTATION_TYPE must be set");
 }
 
+const URL = __ENV.URL;
+if (!URL) {
+    throw new Error("URL is required");
+}
+
 export const options = {
     scenarios: {
         default: {
@@ -37,7 +42,7 @@ export function setup() {
             },
         };
         const res = http.post(
-            "http://localhost:3000/relic/push?user=Changes",
+            URL + "/relic/push?user=Changes",
             JSON.stringify({
                 clientId,
                 mutations: [mutation],
@@ -52,11 +57,6 @@ export function setup() {
 
         data.push({ clientId });
     }
-
-    const res = http.del("http://localhost:3000/changes");
-    check(res, {
-        "status is 200": (r) => r.status === 200,
-    });
 
     return data;
 }
@@ -100,7 +100,7 @@ export default function (data) {
 
 
     const res = http.post(
-        "http://localhost:3000/relic/push?user=Changes",
+        URL + "/relic/push?user=Changes",
         JSON.stringify({
             clientId,
             mutations: [mutation],
@@ -115,8 +115,14 @@ export default function (data) {
 }
 
 export function teardown() {
-    const res = http.del("http://localhost:3000/changes");
+    const res = http.del(URL + "/changes");
     check(res, {
         "status is 200": (r) => r.status === 200,
     });
+}
+
+export function handleSummary(data) {
+    return {
+        'summary.json': JSON.stringify(data),
+    };
 }

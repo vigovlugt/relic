@@ -11,6 +11,7 @@
     "bench:relic": "k6 run scripts/relic.js",
     "bench:rest": "k6 run scripts/rest.js",
     "bench:relic-all": "tsx scripts/relic-all.ts",
+    "bench:rest-all": "tsx scripts/rest-all.ts",
     "up:relic": "docker compose -f docker-compose.relic.yml up -d",
     "up:rest": "docker compose -f docker-compose.rest.yml up -d",
     "down:relic": "docker compose -f docker-compose.relic.yml down",
