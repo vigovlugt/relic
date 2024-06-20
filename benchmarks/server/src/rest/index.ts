@@ -91,7 +91,6 @@ app.post(
         })
     ),
     async (c) => {
-        console.log("Creating reservation");
         const user = c.req.query("user");
         if (!user) {
             return new Response("Unauthorized", { status: 401 });
