@@ -12,61 +12,6 @@ importers:
         specifier: ^1.13.3
         version: 1.13.3
 
-  benchmarks:
-    dependencies:
-      '@hono/node-server':
-        specifier: ^1.11.1
-        version: 1.11.1
-      '@hono/zod-validator':
-        specifier: ^0.2.2
-        version: 0.2.2(hono@4.4.4)(zod@3.23.5)
-      '@mrs/server':
-        specifier: workspace:^
-        version: link:../examples/meeting-room-scheduler/server
-      '@relic/adapter-drizzle':
-        specifier: workspace:^
-        version: link:../packages/adapter-drizzle
-      '@relic/server':
-        specifier: workspace:^
-        version: link:../packages/server
-      '@types/pg':
-        specifier: ^8.11.6
-        version: 8.11.6
-      dotenv:
-        specifier: ^16.4.5
-        version: 16.4.5
-      drizzle-orm:
-        specifier: ^0.30.10
-        version: 0.30.10(@types/pg@8.11.6)(pg@8.11.5)
-      hono:
-        specifier: ^4.4.4
-        version: 4.4.4
-      pg:
-        specifier: ^8.11.5
-        version: 8.11.5
-      tsup:
-        specifier: ^8.0.2
-        version: 8.0.2(@swc/core@1.5.25)
-      zod:
-        specifier: ^3.23.5
-        version: 3.23.5
-    devDependencies:
-      '@swc/cli':
-        specifier: ^0.3.12
-        version: 0.3.12(@swc/core@1.5.25)
-      '@swc/core':
-        specifier: ^1.5.25
-        version: 1.5.25
-      '@types/k6':
-        specifier: ^0.51.0
-        version: 0.51.0
-      '@types/node':
-        specifier: ^20.11.17
-        version: 20.12.12
-      tsx:
-        specifier: ^4.13.1
-        version: 4.13.1
-
   benchmarks/client:
     dependencies:
       '@mrs/client':
