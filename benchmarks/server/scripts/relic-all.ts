@@ -2,7 +2,7 @@ import { ExecException, execSync } from "node:child_process";
 import { mkdirSync, readFileSync, rm, rmSync, writeFileSync } from "node:fs";
 
 let rows = [1, 10, 100, 1000, 10000, 100000];
-rows = [100000];
+rows = [1, 10, 100, 1000, 10000];
 
 const commands = {
     "initial-pull": "scripts/relic-pull-initial.js",
