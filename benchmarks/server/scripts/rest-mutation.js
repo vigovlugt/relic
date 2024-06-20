@@ -24,7 +24,7 @@ export const options = {
     },
 };
 
-export default function (data) {
+export default function () {
     switch (MUTATION_TYPE) {
         case "createReservation": {
             const res = http.post(
@@ -36,9 +36,13 @@ export default function (data) {
                     roomId: "00000000-0000-0000-0000-000000000000",
                 }),
                 {
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
                     timeout: "600s",
                 }
             );
+            console.log(res, "\n");
             check(res, {
                 "status is 200": (r) => r.status === 200,
             });
@@ -52,6 +56,9 @@ export default function (data) {
                     start: new Date().toISOString(),
                 }),
                 {
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
                     timeout: "600s",
                 }
             );
@@ -67,6 +74,9 @@ export default function (data) {
                     id: "00000000-0000-0000-0000-000000000000",
                 }),
                 {
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
                     timeout: "600s",
                 }
             );

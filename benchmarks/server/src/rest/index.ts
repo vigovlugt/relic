@@ -91,6 +91,7 @@ app.post(
         })
     ),
     async (c) => {
+        console.log("Creating reservation");
         const user = c.req.query("user");
         if (!user) {
             return new Response("Unauthorized", { status: 401 });
@@ -114,6 +115,8 @@ app.post(
                 owner: user,
             });
         });
+
+        return new Response();
     }
 );
 app.put(
@@ -137,6 +140,8 @@ app.put(
             .update(reservations)
             .set(input)
             .where(eq(reservations.id, input.id));
+
+        return new Response();
     }
 );
 app.delete("/reservations/:id", zValidator("json", z.string()), async (c) => {
@@ -148,6 +153,8 @@ app.delete("/reservations/:id", zValidator("json", z.string()), async (c) => {
     const id = c.req.valid("json");
 
     await db.delete(reservations).where(eq(reservations.id, id));
+
+    return new Response();
 });
 app.post("/rows", async (c) => {
     const rows = c.req.query("rows");
