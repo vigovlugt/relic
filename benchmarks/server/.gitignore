@@ -29,4 +29,4 @@ lerna-debug.log*
 
 !.env
 results/
-rest-results/
+results-rest/
