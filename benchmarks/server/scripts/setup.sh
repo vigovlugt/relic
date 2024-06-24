@@ -18,3 +18,5 @@ git clone https://github.com/vigovlugt/relic.git
 cd relic/benchmarks/server
 
 pnpm --filter "." install
+
+export NODE_OPTIONS=--max-old-space-size=$(expr $(echo "$(free -m)" | awk '/^Mem:/ {print $2}') - 512)
