@@ -97,6 +97,14 @@ async function parseJsonData() {
         reqsBySecond.set(second, (reqsBySecond.get(second) ?? 0) + 1);
     }
 
+    const minTime = Math.min(...reqsBySecond.keys());
+    const maxTime = Math.max(...reqsBySecond.keys());
+    for (let i = minTime; i <= maxTime; i++) {
+        if (!reqsBySecond.has(i)) {
+            reqsBySecond.set(i, 0);
+        }
+    }
+
     const rps = Array.from(reqsBySecond.values());
 
     const rpsAvg = rps.reduce((acc, curr) => {
