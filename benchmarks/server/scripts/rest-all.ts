@@ -157,5 +157,5 @@ async function main() {
     }
 }
 
-// main();
-parseJsonData().then(console.log).catch(console.error);
+main();
+// parseJsonData().then(console.log).catch(console.error);
